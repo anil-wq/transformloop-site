@@ -1,10 +1,18 @@
 Owner: Anil Chintalacheruvu
-Why: Defines what the Transform Loop website (index.html) is for, the decisions behind it, and the checks it must keep passing.
+Why: Defines what the Transform Loop website is for, what AI-native means here, the decisions behind it, and the checks it must keep passing.
+Covers: index.html
 Status: live content, two open items (see bottom)
 
-# Standing rule
+# What AI-native means here (standing rule)
 
-transformloop.ai is AI-native from day one. Nothing goes into the code without context. Every change to site code must update a file in context/ in the same change, and every context file must name an Owner and the Why. This is enforced by the Context gate workflow, which fails any change that breaks it.
+transformloop.ai is AI-native from day one. Nothing goes into the code without context. The context itself goes through every required gate, including the retrieval gate:
+- Write gate: every context file names an Owner, the Why and what it Covers. Checked on every change.
+- Retrieval gate: every code file is covered by a context file, so whoever or whatever changes it can always retrieve the right context first. Checked on every change.
+- Use gate: a change to code must update the context that covers it, in the same change. Checked on every change.
+- Freshness gate: context that was retrieved must not go stale before the change lands. Covered by the use gate for now (same change updates both).
+- Health gate: golden checks (below) run against the live site once in a while, on a schedule, not on every change. When one fails, the context or the site gets fixed.
+
+These are enforced by GitHub workflows in .github/workflows: context-gate.yml (every change) and health.yml (scheduled).
 
 # Feature: one-page site (index.html)
 
@@ -18,12 +26,12 @@ Decisions and reasons:
 - Nothing on the site may relate to the business of any current or former employer.
 - Single static file, no tracking, no form that collects data. Reason: nothing to leak, free hosting, nobody in the middle of visitors' information.
 
-# Golden checks (the site must always pass these)
+# Golden checks (the health gate runs these)
 1. The headline reads: Get more from your AI budget, with code you can trust.
-2. There are exactly five gates (Write, Retrieval, Use, Health, Freshness), four services and four method steps.
+2. There are exactly five gates (Write, Retrieval, Use, Health, Freshness).
 3. Every Book a call button leads to the real booking link (see open items).
 4. No performance numbers, no returns, no client names, no employer references anywhere.
-5. The page works at phone width with no sideways scrolling.
+5. The page works at phone width with no sideways scrolling (checked by hand for now).
 
 # Open items
 - Booking link is still the placeholder https://calendly.com/. Replace with the real link.
