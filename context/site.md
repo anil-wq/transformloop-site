@@ -45,3 +45,4 @@ Decisions and reasons:
 - No headshot: the About section has no photo for now. Add one when available.
 - Domain: transformloop.ai is pointed at this site (DNS at the registrar, custom domain and HTTPS in GitHub Pages). Done 2026-11-22.
 - AI Build Check lives at /build-check/ (build-check/index.html). Answers stay in the visitor's browser and nothing is sent anywhere. No email capture yet; it arrives with the email platform. Added 2026-11-22.
+- Build Check comparison takes up to four pasted codes (you plus up to three colleagues, for example CEO, CTO and COO), one per line. It shows every person side by side, flags areas where views differ (different status, or confidence 50 points apart), lists those first, and asks one question per flagged area: what evidence would convince all of us? Same role twice is shown as CTO and CTO 2. Everything still happens in the browser. Added 2026-11-22.

@@ -1,14 +1,13 @@
 {
-  "summary": "Add AI Build Check at /build-check, remove placeholders, link from nav and hero",
+  "summary": "Build Check compares up to four people (CEO, CTO, COO and more)",
   "files_touched": [
-    "build-check/index.html",
-    "index.html"
+    "build-check/index.html"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "9fe1e87b62148ed54dc13851882ed3024bba3bfe166ff45e8fa866994e6a252b"
+      "sha256": "0be7b434b6ebd97795d0c4d9e3c3b95e3c2b479e90d8bf842b12cb04a34c9666"
     }
   ],
-  "time": "2026-11-22T21:29:47Z"
+  "time": "2026-11-22T23:53:34Z"
 }

@@ -455,36 +455,40 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     if (tk.length) {
       h += '<section class="card"><h2>What gets in the way</h2><p class="sub">' + tk.map(function (b) { return esc(BLOCKERS[b]) + ' (' + tally[b] + ')'; }).join(', ') + '.</p></section>';
     }
-    h += '<section class="card" aria-labelledby="t-cmp"><h2 id="t-cmp">Compare with a colleague</h2>' +
-      '<p class="sub">The most useful result is where two people disagree. Ask a colleague to take this check on their own, then swap codes. The code holds only answers, never names, and comparing happens in this browser.</p>' +
+    h += '<section class="card" aria-labelledby="t-cmp"><h2 id="t-cmp">Compare with colleagues</h2>' +
+      '<p class="sub">The most useful result is where people disagree. Ask your CEO, CTO or COO to take this check on their own, then swap codes. Paste up to four codes below, one per line. The code holds only answers, never names, and comparing happens in this browser.</p>' +
       '<div><b>Your code</b></div><textarea id="mycode" readonly aria-label="Your results code">' + esc(code()) + '</textarea>' +
       '<div class="row"><button type="button" class="btn ghost" data-act="copy">Copy my code</button><span class="msg" id="copymsg" role="status"></span></div>' +
-      '<div><b>Your colleague’s code</b></div><textarea id="theircode" aria-label="Your colleague’s results code" placeholder="Paste their code here"></textarea>' +
+      '<div><b>Your colleagues’ codes</b></div><textarea id="theircode" aria-label="Your colleagues’ results codes" placeholder="Paste one code per line"></textarea>' +
       '<div class="row"><button type="button" class="btn" data-act="compare">Compare</button><span class="msg" id="cmpmsg" role="status"></span></div><div id="cmp"></div></section>';
     h += '<section class="card cta"><h2>Want to talk it through?</h2><p>Most of these gaps come down to one thing: writing down what correct means, and checking AI work against it. That is what Transform Loop helps teams do. A free conversation, no pitch.</p><a class="btn" href="' + BOOK_URL + '" rel="noopener">Talk it through</a></section>';
     h += '<section class="card"><div class="row"><button type="button" class="btn ghost" data-act="edit">Change my answers</button><button type="button" class="btn ghost" data-act="reset">Start over</button></div></section>';
     box.innerHTML = h;
   }
 
-  function renderCompare(them) {
+  function renderCompare(others) {
     var mine = {}; unlocked().forEach(function (id) { if (complete(ar(id))) mine[id] = ar(id); });
-    var all = AREAS.filter(function (a) { return mine[a.id] || them.a[a.id]; });
-    var rows = all.map(function (a) {
-      var m = mine[a.id], t = them.a[a.id];
-      var both = !!(m && t);
-      var sm = m ? statusOf(m) : null, stt = t ? statusOf(t) : null;
-      var differ = both && (sm !== stt || Math.abs(confN(m) - confN(t)) >= 0.5);
-      return { a: a, m: m, t: t, sm: sm, st: stt, both: both, differ: differ };
-    });
-    rows.sort(function (x, y) { return (y.differ ? 1 : 0) - (x.differ ? 1 : 0); });
-    var shared = rows.filter(function (r) { return r.both; });
+    var people = [{ r: state.role || 'You', a: mine, you: true }].concat(others);
+    var seenRole = {};
+    people.forEach(function (p) { seenRole[p.r] = (seenRole[p.r] || 0) + 1; p.name = p.r + (seenRole[p.r] > 1 ? ' ' + seenRole[p.r] : ''); });
+    var rows = AREAS.map(function (a) {
+      var have = people.filter(function (p) { return p.a[a.id]; });
+      var sts = have.map(function (p) { return statusOf(p.a[a.id]); });
+      var cs = have.map(function (p) { return confN(p.a[a.id]); });
+      var differ = have.length > 1 && (sts.some(function (x) { return x !== sts[0]; }) || Math.max.apply(null, cs) - Math.min.apply(null, cs) >= 0.5);
+      var spread = have.length > 1 ? (Math.max.apply(null, cs) - Math.min.apply(null, cs)) : 0;
+      return { a: a, have: have.length, differ: differ, spread: spread };
+    }).filter(function (r) { return r.have > 0; });
+    rows.sort(function (x, y) { return (y.differ ? 1 : 0) - (x.differ ? 1 : 0) || y.spread - x.spread; });
+    var shared = rows.filter(function (r) { return r.have > 1; });
     var diff = shared.filter(function (r) { return r.differ; });
-    var me = state.role || 'You', th = them.r;
-    function cell(s, st) { return s ? '<span class="st ' + st + '">' + STATUS[st].i + ' ' + STATUS[st].l + '</span><br><small>' + Math.round(confN(s) * 100) + '% confident</small>' : '<small>Not checked</small>'; }
-    var h = '<p class="sub" style="margin-top:8px"><b>' + (shared.length ? 'You differ on ' + diff.length + ' of ' + shared.length + ' shared ' + (shared.length === 1 ? 'area' : 'areas') + '.' : 'You did not check any of the same areas.') + '</b> ' + (diff.length ? 'Start the conversation there.' : shared.length ? 'You see it the same way.' : 'Open more sections to find overlap.') + '</p>' +
-      '<div style="overflow-x:auto"><table><thead><tr><th>Area</th><th>' + esc(me) + ' (you)</th><th>' + esc(th) + '</th></tr></thead><tbody>' +
-      rows.map(function (r) { return '<tr class="' + (r.differ ? 'differ' : '') + '"><td><b>' + esc(r.a.title) + '</b>' + (r.differ ? '<br><small>You see this differently</small>' : '') + '</td><td>' + cell(r.m, r.sm) + '</td><td>' + cell(r.t, r.st) + '</td></tr>'; }).join('') +
+    function cell(s) { if (!s) return '<small>Not checked</small>'; var st = statusOf(s); return '<span class="st ' + st + '">' + STATUS[st].i + ' ' + STATUS[st].l + '</span><br><small>' + Math.round(confN(s) * 100) + '% confident</small>'; }
+    var who = people.length === 2 ? 'You differ' : 'You do not all agree';
+    var h = '<p class="sub" style="margin-top:8px"><b>' + (shared.length ? who + ' on ' + diff.length + ' of ' + shared.length + ' shared ' + (shared.length === 1 ? 'area' : 'areas') + '.' : 'No area was checked by more than one of you.') + '</b> ' + (diff.length ? 'Start the conversation there.' : shared.length ? 'You see it the same way.' : 'Open more sections to find overlap.') + '</p>' +
+      '<div style="overflow-x:auto"><table><thead><tr><th>Area</th>' + people.map(function (p) { return '<th>' + esc(p.name) + (p.you ? ' (you)' : '') + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr class="' + (r.differ ? 'differ' : '') + '"><td><b>' + esc(r.a.title) + '</b>' + (r.differ ? '<br><small>You see this differently</small>' : '') + '</td>' + people.map(function (p) { return '<td>' + cell(p.a[r.a.id]) + '</td>'; }).join('') + '</tr>'; }).join('') +
       '</tbody></table></div>';
+    if (diff.length) h += '<p class="sub">For each flagged area, answer one question in writing: what evidence would convince all of us? A difference of view usually means one person has proof the others have not seen.</p>';
     document.getElementById('cmp').innerHTML = h;
   }
 
@@ -544,8 +548,12 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       try { navigator.clipboard.writeText(v).then(ok, no); } catch (x) { no(); }
     } else if (act === 'compare') {
       var cm = document.getElementById('cmpmsg'); cm.className = 'msg'; cm.textContent = '';
-      try { renderCompare(parse(document.getElementById('theircode').value)); }
-      catch (x) { document.getElementById('cmp').innerHTML = ''; cm.className = 'msg err'; cm.textContent = 'That code did not work. Ask your colleague to copy it again.'; }
+      try {
+        var codes = document.getElementById('theircode').value.split(/\s+/).filter(Boolean);
+        if (!codes.length || codes.length > 4) throw new Error('count');
+        renderCompare(codes.map(parse));
+      }
+      catch (x) { document.getElementById('cmp').innerHTML = ''; cm.className = 'msg err'; cm.textContent = 'One of the codes did not work. Paste one code per line, up to four, and ask your colleague to copy it again if needed.'; }
     }
   });
 
