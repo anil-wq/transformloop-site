@@ -1,6 +1,6 @@
 Owner: mailanilkumar
 Why: Defines what the Transform Loop website is for, what AI-native means here, the decisions behind it, and the checks it must keep passing.
-Covers: index.html
+Covers: index.html, build-check/index.html
 Status: live content, two open items (see bottom)
 
 # What AI-native means here (standing rule)
