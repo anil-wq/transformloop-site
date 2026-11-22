@@ -1,6 +1,6 @@
 # Owner: Anil Chintalacheruvu
 # Why: Standing rule for transformloop.ai: nothing goes into the code without context.
-# This gate runs on every change. It enforces the write, retrieval and use gates (see context/site.md).
+# This gate runs on every change. It enforces the write, retrieval, use and freshness gates (see context/site.md and context/agents.md).
 # Covers: .github/workflows/context-gate.yml
 name: Context gate
 on:
@@ -38,14 +38,14 @@ jobs:
             done
           done
           echo "== Retrieval gate: every code file is covered by a context file =="
-          for c in $(git ls-files | grep -E '[.](html|css|js)$'); do
+          for c in $(git ls-files | grep -E '[.](html|css|js|py)$'); do
             if ! grep -h "^Covers:" context/*.md | grep -qF "$c"; then
               echo "::error::Retrieval gate: $c is not covered by any context file"
               FAIL=1
             fi
           done
           echo "== Use gate: a changed code file needs its context changed in the same change =="
-          for c in $(echo "$CHANGED" | grep -E '[.](html|css|js)$' || true); do
+          for c in $(echo "$CHANGED" | grep -E '[.](html|css|js|py)$' || true); do
             for f in $(grep -lE "^Covers:.*$c" context/*.md || true); do
               if ! echo "$CHANGED" | grep -qx "$f"; then
                 echo "::error::Use gate: $c changed but $f (its context) was not updated"
@@ -53,4 +53,6 @@ jobs:
               fi
             done
           done
+          echo "== Use gate and freshness gate: the receipt of what the agent retrieved =="
+          BASE="$BASE" python3 mcp/verify_receipt.py || FAIL=1
           exit $FAIL
