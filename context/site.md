@@ -1,4 +1,4 @@
-Owner: Anil Chintalacheruvu
+Owner: mailanilkumar
 Why: Defines what the Transform Loop website is for, what AI-native means here, the decisions behind it, and the checks it must keep passing.
 Covers: index.html
 Status: live content, two open items (see bottom)
@@ -43,4 +43,4 @@ Decisions and reasons:
 # Open items
 - Booking link is still the placeholder https://calendly.com/. Replace with the real link.
 - Headshot is still the placeholder initials AC. Replace with a real photo.
-- The domain transformloop.ai is not yet pointed at this site (DNS and the custom domain setting in GitHub Pages).
+- Domain: transformloop.ai is pointed at this site (DNS at the registrar, custom domain and HTTPS in GitHub Pages). Done 2026-11-22.
