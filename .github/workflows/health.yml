@@ -1,0 +1,30 @@
+# Owner: Anil Chintalacheruvu
+# Why: Health gate for transformloop.ai. Runs the golden checks from context/site.md once in a while (weekly), not on every change.
+# When a check fails, the site or its context gets fixed.
+name: Health gate
+on:
+  schedule:
+    - cron: '17 15 * * 1'
+  workflow_dispatch:
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run golden checks
+        run: |
+          FAIL=0
+          if ! grep -q "Get more from your AI budget, with code you can trust." index.html; then
+            echo "::error::Golden check 1 failed: headline changed"; FAIL=1
+          fi
+          GATES=$(grep -o 'tile-label">Gate [0-9]' index.html | wc -l)
+          if [ "$GATES" != "5" ]; then
+            echo "::error::Golden check 2 failed: expected 5 gates, found $GATES"; FAIL=1
+          fi
+          if grep -qE 'href="https://calendly.com/"' index.html; then
+            echo "::warning::Golden check 3: booking link is still the placeholder"
+          fi
+          if grep -qiE '[0-9]+ ?% (return|gain|profit)' index.html; then
+            echo "::error::Golden check 4 failed: a performance number was found"; FAIL=1
+          fi
+          exit $FAIL
