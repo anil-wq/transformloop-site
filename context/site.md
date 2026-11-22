@@ -36,3 +36,10 @@ Decisions and reasons:
 # Open items
 - Booking link is still the placeholder https://calendly.com/. Replace with the real link.
 - Headshot is still the placeholder initials AC. Replace with a real photo.
+# How agents build here (standing rule)
+
+- The agent that builds the code is the same agent that retrieves the context. It never works from memory or from the whole repository.
+- Retrieval goes through an MCP context server (the retrieval gate). The agent asks for the context covering the files it is about to touch and gets back only that context, with the version (hash) of each context file.
+- Every retrieval is recorded. The details of what was retrieved are checked again at the use gate: a change must carry a receipt listing the context files and versions it relied on. The gate confirms the receipt matches the current context (freshness) and that the change updates that context when behavior changes.
+- The health gate keeps running on its schedule, separate from changes.
+- Status: design agreed, not built yet. Today the workflows enforce the write gate, retrieval coverage and the same-change use gate. The MCP context server and the retrieval receipts are the next build, and they will be added to this file first.
