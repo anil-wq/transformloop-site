@@ -1,0 +1,14 @@
+{
+  "summary": "Add AI Build Check at /build-check, remove placeholders, link from nav and hero",
+  "files_touched": [
+    "build-check/index.html",
+    "index.html"
+  ],
+  "retrieved": [
+    {
+      "file": "context/site.md",
+      "sha256": "9fe1e87b62148ed54dc13851882ed3024bba3bfe166ff45e8fa866994e6a252b"
+    }
+  ],
+  "time": "2026-11-22T21:29:47Z"
+}

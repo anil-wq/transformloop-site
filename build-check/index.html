@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Build Check</title>
+<meta name="description" content="A private check for CEOs, CTOs and COOs: does what you built with AI do what you think it does? Sections open up based on what you tell us.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #ffffff; --bg-alt: #f3f5f9; --fg: #12233f; --soft: #3d4b63; --muted: #5a6577; --line: #d9dee6;
+  --brand: #12233f; --on-brand: #ffffff; --on-brand-soft: #c9d2e0;
+  --accent: #c4560b; --accent-bg: #fbe9dc; --on-accent: #ffffff;
+  --good: #14633a; --good-bg: #e0f3e8; --warn: #7a5200; --warn-bg: #fdefd0; --bad: #a3231b; --bad-bg: #fbe3e0;
+  --mark-ink: #12233f; --mark-accent: #c4560b;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1a30; --bg-alt: #132440; --fg: #eef2f8; --soft: #c9d2e0; --muted: #9fadc2; --line: #26385a;
+    --brand: #08121f; --accent: #f2a553; --accent-bg: #3a2a1a; --on-accent: #12233f;
+    --good: #7fd6a8; --good-bg: #12352a; --warn: #f0c36a; --warn-bg: #3b2f12; --bad: #ff9d94; --bad-bg: #3d1c1a;
+    --mark-ink: #eef2f8; --mark-accent: #f2a553; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1a30; --bg-alt: #132440; --fg: #eef2f8; --soft: #c9d2e0; --muted: #9fadc2; --line: #26385a;
+  --brand: #08121f; --accent: #f2a553; --accent-bg: #3a2a1a; --on-accent: #12233f;
+  --good: #7fd6a8; --good-bg: #12352a; --warn: #f0c36a; --warn-bg: #3b2f12; --bad: #ff9d94; --bad-bg: #3d1c1a;
+  --mark-ink: #eef2f8; --mark-accent: #f2a553; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg-alt); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.15; color: var(--fg); text-wrap: balance; }
+h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 600; letter-spacing: -0.02em; }
+h2 { font-size: 1.35rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-family: var(--font-display); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+.site-header { background: var(--bg); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+.header-row { display: flex; align-items: center; gap: 12px; min-height: 60px; }
+.brand-name { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.14em; font-size: 0.9rem; white-space: nowrap; }
+.brand-name span { color: var(--accent); }
+.tag { margin-left: auto; font-size: 0.85rem; color: var(--muted); }
+.hero { padding: 40px 0 8px; display: flex; flex-direction: column; gap: 16px; }
+.lede { font-size: 1.1rem; color: var(--soft); max-width: 60ch; }
+.private { display: inline-flex; gap: 8px; align-items: center; font-size: 0.9rem; color: var(--soft); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; width: fit-content; }
+.card { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+.card.open-in { animation: rise 0.45s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card.open-in { animation: none; } }
+.step { font-family: var(--font-display); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.sub { color: var(--soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { position: relative; }
+.opt input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.opt span { display: flex; align-items: center; min-height: 44px; padding: 8px 16px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); font-size: 0.95rem; cursor: pointer; }
+.opt input:checked + span { border-color: var(--accent); background: var(--accent-bg); font-weight: 600; }
+.opt input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.opt:hover span { border-color: var(--muted); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.list .opt span { align-items: flex-start; gap: 12px; padding: 12px 14px; line-height: 1.4; }
+.list .opt span::before { content: ""; flex: none; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--muted); border-radius: 5px; background: var(--bg); }
+.list .opt input:checked + span::before { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--bg); }
+.q { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.q.reveal { animation: rise 0.4s ease both; }
+.q legend, .q .qt { font-weight: 600; padding: 0; }
+fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+.area-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.badge { font-family: var(--font-display); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--bg-alt); color: var(--soft); border: 1px solid var(--line); }
+.opened { font-size: 0.9rem; color: var(--accent); font-weight: 500; }
+.note { font-size: 0.92rem; color: var(--soft); background: var(--bg-alt); border-radius: 10px; padding: 10px 14px; }
+.st { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem; padding: 3px 10px; border-radius: 999px; }
+.st.solid { background: var(--good-bg); color: var(--good); }
+.st.partial { background: var(--warn-bg); color: var(--warn); }
+.st.gap { background: var(--warn-bg); color: var(--warn); }
+.st.blind { background: var(--bad-bg); color: var(--bad); }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; border-radius: 10px; border: 2px solid transparent; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-weight: 600; font-size: 0.98rem; cursor: pointer; text-decoration: none; }
+.btn:hover { filter: brightness(1.07); }
+.btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; filter: none; }
+.btn.ghost { background: transparent; border-color: var(--line); color: var(--fg); }
+.btn:focus-visible, .link:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.progress { position: sticky; top: 0; z-index: 5; background: var(--bg-alt); padding: 10px 0 8px; margin-top: 8px; }
+.bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width 0.4s ease; }
+.progress .meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+.map { display: flex; flex-direction: column; gap: 14px; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; gap: 14px; align-items: center; }
+.mrow .nm { font-weight: 600; }
+.meter { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meter div { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; font-size: 0.78rem; color: var(--muted); }
+.meter b { display: block; height: 8px; border-radius: 999px; background: var(--line); position: relative; overflow: hidden; }
+.meter b i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; }
+.meter .c i { background: var(--muted); }
+.meter .e i { background: var(--accent); }
+@media (max-width: 640px) { .mrow { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+.prio { display: flex; flex-direction: column; gap: 12px; counter-reset: p; }
+.prio > div { display: grid; grid-template-columns: 32px 1fr; gap: 12px; }
+.prio > div::before { counter-increment: p; content: counter(p); width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 600; }
+textarea { width: 100%; min-height: 84px; resize: vertical; font: 0.82rem/1.4 ui-monospace, Menlo, Consolas, monospace; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; word-break: break-all; }
+textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.differ td:first-child { box-shadow: inset 3px 0 0 var(--accent); padding-left: 12px; }
+.cta { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
+.cta h2, .cta p { color: var(--on-brand); }
+.cta p { color: var(--on-brand-soft); }
+.cta .btn { background: #f2a553; color: #12233f; width: fit-content; }
+footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
+.link { color: var(--accent); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.msg { font-size: 0.9rem; color: var(--soft); min-height: 1.3em; }
+.msg.err { color: var(--bad); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="tl-mark" viewBox="0 0 96 96">
+      <path d="M 88 36 V 22 Q 88 8 74 8 H 22 Q 8 8 8 22 V 74 Q 8 88 22 88 H 74 Q 88 88 88 74 V 60" fill="none" stroke="var(--mark-ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 24 30 H 50 M 37 30 V 68" fill="none" stroke="var(--mark-ink)" stroke-width="8" stroke-linecap="round"/>
+      <path d="M 52 30 H 60 V 68 H 74" fill="none" stroke="var(--mark-accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <svg width="32" height="32" aria-hidden="true"><use href="#tl-mark"/></svg>
+    <span class="brand-name">TRANSFORM <span>LOOP</span></span>
+    <span class="tag">AI Build Check</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">For CEOs, CTOs and COOs</div>
+    <h1>Does what you built with AI do what you think it does?</h1>
+    <p class="lede">Tell us what is on your mind. Sections open up based on your answers, so you only see what is relevant to you. About 10 minutes.</p>
+    <div class="private"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Private: your answers stay in this browser. Nothing is sent anywhere.</div>
+  </section>
+
+  <section class="card" id="s-role" aria-labelledby="t-role">
+    <div class="step">Step 1</div>
+    <h2 id="t-role">Who is answering?</h2>
+    <fieldset><legend class="sr">Your role</legend><div class="chips" id="roles"></div></fieldset>
+  </section>
+
+  <section class="card" id="s-mind" aria-labelledby="t-mind" hidden>
+    <div class="step">Step 2</div>
+    <h2 id="t-mind">What feels true right now?</h2>
+    <p class="sub">Tick anything that sounds familiar. Each one opens a section below. Nothing ticked? Choose the last option and we will start with the basics.</p>
+    <fieldset><legend class="sr">What feels true</legend><div class="list" id="picks"></div></fieldset>
+  </section>
+
+  <div class="progress" id="progress" hidden>
+    <div class="bar" role="progressbar" aria-label="Sections completed" aria-valuemin="0" aria-valuemax="100" id="pbar"><i id="pfill"></i></div>
+    <div class="meta"><span id="pleft"></span><span id="pcount"></span></div>
+  </div>
+
+  <div id="areas"></div>
+
+  <section class="card" id="s-more" hidden>
+    <h3>Not on your mind yet? Check another area</h3>
+    <p class="sub">Open any section that did not come up on its own.</p>
+    <div class="chips" id="more"></div>
+  </section>
+
+  <section class="card" id="s-go" hidden>
+    <div class="row"><button type="button" class="btn" id="go" data-act="results">See my results</button><span class="msg" id="gomsg"></span></div>
+  </section>
+
+  <div id="results"></div>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 Transform Loop · transformloop.ai · This check is a conversation starter, not an audit.</div>
+</footer>
+
+<script>
+(function () {
+  var KEY = 'tl-build-check-v1';
+  var BOOK_URL = 'https://transformloop.ai/#contact';
+
+  var ROLES = ['CEO', 'CTO', 'COO', 'Engineering or product leader', 'Other'];
+
+  var CONF = [
+    { v: 'very', l: 'Very confident', n: 1 },
+    { v: 'fairly', l: 'Fairly confident', n: 0.7 },
+    { v: 'not', l: 'Not very confident', n: 0.35 },
+    { v: 'unsure', l: 'Not sure at all', n: 0.1 }
+  ];
+  var ANS = [{ v: 'y', l: 'Yes', n: 1 }, { v: 'u', l: 'Not sure', n: 0.5 }, { v: 'n', l: 'No', n: 0 }];
+  var BLOCKERS = ['Nobody owns it', 'No time', 'We do not know how', 'It is not seen as a priority', 'Our tools do not support it', 'We assumed the AI handled it'];
+  var STATUS = {
+    solid: { l: 'Solid', i: '✓' },
+    partial: { l: 'Partly there', i: '◑' },
+    gap: { l: 'Known gap', i: '!' },
+    blind: { l: 'Blind spot', i: '⚠' }
+  };
+  var BASICS = ['define', 'proof', 'owner'];
+
+  var AREAS = [
+    { id: 'define', title: 'What "done" means', pick: 'We are not sure what "done" or "correct" means for what we are building.',
+      conf: 'How confident are you that everyone agrees on what "done" and "correct" mean?',
+      q: ['Is there a written definition of what correct looks like, in plain words?',
+          'Do you know which behaviours must match exactly, and which are allowed to change?',
+          'Could someone outside the team read it and tell whether you have reached it?'],
+      advice: 'Write one page, in plain words, that says what correct means and which behaviours must match exactly. Ask someone outside the team to read it and tell you if it is clear.',
+      rel: 'proof' },
+    { id: 'intent', title: 'The "why" behind the code', pick: 'AI wrote or rebuilt it, but nobody can say why it was built that way.',
+      conf: 'How confident are you that the reasons behind your code are known and written down?',
+      q: ['For your most important features, is the reason they work the way they do written down?',
+          'When AI changes code, does it receive that reason, or only the code?',
+          'Is that reason kept up to date by a named person?'],
+      advice: 'For your five most important features, write down why they work the way they do. Have the people who know check it, and give that reason to the AI along with the code.',
+      rel: 'owner' },
+    { id: 'proof', title: 'Proof it works', pick: 'Tests pass, but surprises still reach customers.',
+      conf: 'How confident are you that problems are found before customers find them?',
+      q: ['Do automated tests run before every release?',
+          'Are those tests built from real customer cases, including the odd ones?',
+          'Do you usually find problems before your customers do?'],
+      advice: 'Pick ten real customer cases, including the odd ones, and turn them into tests that run before every release.',
+      rel: 'dates' },
+    { id: 'owner', title: 'Ownership and understanding', pick: 'Only one or two people really understand the code.',
+      conf: 'How confident are you that the knowledge does not live in one or two heads?',
+      q: ['Could at least two people explain how each major feature works?',
+          'Does every major feature have a named owner?',
+          'Is there a check that catches a wrong AI change without relying on one person’s memory?'],
+      advice: 'Name an owner for every major feature, and make sure a second person can explain it. Add a check that catches a wrong AI change automatically.',
+      rel: 'intent' },
+    { id: 'dates', title: 'Confidence in the date', pick: 'Our release dates feel more like hopes than measurements.',
+      conf: 'How confident are you in your next release date?',
+      q: ['Is your next release date based on measured progress, not a promise?',
+          'Would the people closest to the work give about the same confidence as leadership?',
+          'Is there an agreed plan, and a named decider, if the date slips?'],
+      advice: 'Replace the promised date with measured progress: how much of what must work is confirmed working. Ask each person for a confidence number from 0 to 100 and compare them.',
+      rel: 'define' },
+    { id: 'spend', title: 'AI spend and value', pick: 'AI spend is rising and we cannot see what it buys.',
+      conf: 'How confident are you that your AI spend is delivering value?',
+      q: ['Can you see what you spend on AI tools and tokens, by team or by project?',
+          'Do you know what that spend has bought: faster delivery, fewer bugs, or both?',
+          'Have you tried smaller models or less context for work that does not need the best?'],
+      advice: 'Track AI spend by team or project for one month, next to what shipped. Then try a smaller model or less context where quality does not suffer.',
+      rel: 'guard' },
+    { id: 'guard', title: 'Data and guardrails', pick: 'We are not sure AI only sees what it should.',
+      conf: 'How confident are you that AI tools only see the data and code they are allowed to?',
+      q: ['Is it clear which data and code AI tools are allowed to see?',
+          'Is that enforced by the system, not just by people remembering?',
+          'Can you trace what the AI used when it made a change?'],
+      advice: 'Write down what AI may see and enforce it in the system. Keep a record of the context used for each AI change.',
+      rel: 'spend' },
+    { id: 'parity', title: 'Old versus new', pick: 'We rebuilt or migrated something and it does not behave quite like the original.',
+      conf: 'How confident are you that the new version behaves like the old one where it should?',
+      q: ['Do you have a list of what the old system did, to check the new one against?',
+          'Do you run old and new on the same inputs and compare the results?',
+          'Can you say today what share of the old behaviour is confirmed to match?'],
+      advice: 'List what the old system did, run old and new on the same inputs, and track the share of matching behaviour as a number.',
+      rel: 'define' }
+  ];
+  var BY = {};
+  AREAS.forEach(function (a) { BY[a.id] = a; });
+
+  var state = load() || fresh();
+  var seen = {};
+  var root = document;
+
+  function fresh() { return { role: '', picks: [], basics: false, extra: [], auto: {}, areas: {}, show: false }; }
+  function load() {
+    try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.areas) return s; } catch (e) {}
+    return null;
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function ar(id) { if (!state.areas[id]) state.areas[id] = { c: null, a: {}, b: [] }; return state.areas[id]; }
+
+  function unlocked() {
+    return AREAS.filter(function (a) {
+      return state.picks.indexOf(a.id) > -1 || state.extra.indexOf(a.id) > -1 || state.auto[a.id] ||
+        (state.basics && BASICS.indexOf(a.id) > -1);
+    }).map(function (a) { return a.id; });
+  }
+  function q3Visible(a) { return !!(a.a.q1 && a.a.q2 && (a.a.q1 === 'y' || a.a.q2 === 'y')); }
+  function blockersVisible(a) {
+    if (!(a.a.q1 && a.a.q2)) return false;
+    return ['q1', 'q2', 'q3'].some(function (k) { return a.a[k] === 'n' || a.a[k] === 'u'; });
+  }
+  function complete(a) { return !!(a.c && a.a.q1 && a.a.q2 && (!q3Visible(a) || a.a.q3)); }
+  function confN(a) { var f = CONF.filter(function (c) { return c.v === a.c; })[0]; return f ? f.n : 0; }
+  function evidence(a) {
+    var ks = ['q1', 'q2'].concat(q3Visible(a) ? ['q3'] : []);
+    var sum = 0;
+    ks.forEach(function (k) { var f = ANS.filter(function (x) { return x.v === a.a[k]; })[0]; sum += f ? f.n : 0; });
+    return sum / ks.length;
+  }
+  function statusOf(a) {
+    var c = confN(a), e = evidence(a);
+    if (e >= 0.75) return 'solid';
+    if (c - e >= 0.35) return 'blind';
+    if (e >= 0.45) return 'partial';
+    return 'gap';
+  }
+  function allDone() {
+    var ids = unlocked();
+    return ids.length > 0 && ids.every(function (id) { return complete(ar(id)); });
+  }
+
+  /* ---------- rendering ---------- */
+  function chip(name, val, checked, act, fid, type) {
+    return '<label class="opt"><input type="' + (type || 'radio') + '" name="' + name + '" value="' + esc(val) + '"' + (checked ? ' checked' : '') + ' data-act="' + act + '" data-fid="' + fid + '"><span>' + esc(val.label || val) + '</span></label>';
+  }
+  function renderRoles() {
+    document.getElementById('roles').innerHTML = ROLES.map(function (r, i) {
+      return '<label class="opt"><input type="radio" name="role" value="' + esc(r) + '"' + (state.role === r ? ' checked' : '') + ' data-act="role" data-fid="role' + i + '"><span>' + esc(r) + '</span></label>';
+    }).join('');
+  }
+  function renderPicks() {
+    var html = AREAS.map(function (a) {
+      return '<label class="opt"><input type="checkbox" value="' + a.id + '"' + (state.picks.indexOf(a.id) > -1 ? ' checked' : '') + ' data-act="pick" data-fid="pick-' + a.id + '"><span>' + esc(a.pick) + '</span></label>';
+    }).join('');
+    html += '<label class="opt"><input type="checkbox" value="basics"' + (state.basics ? ' checked' : '') + ' data-act="basics" data-fid="pick-basics"><span>None of these stand out. Start with the basics.</span></label>';
+    document.getElementById('picks').innerHTML = html;
+  }
+  function areaCard(a, i) {
+    var s = ar(a.id), done = complete(s);
+    var h = '<section class="card' + (seen[a.id] ? '' : ' open-in') + '" data-area="' + a.id + '" aria-labelledby="h-' + a.id + '">';
+    h += '<div class="area-head"><div><div class="step">Section ' + (i + 1) + '</div><h2 id="h-' + a.id + '">' + esc(a.title) + '</h2>';
+    if (state.auto[a.id] && state.picks.indexOf(a.id) < 0 && state.extra.indexOf(a.id) < 0 && !(state.basics && BASICS.indexOf(a.id) > -1)) {
+      h += '<div class="opened">Opened because of your answers in “' + esc(BY[state.auto[a.id]].title) + '”</div>';
+    }
+    h += '</div>' + (done ? '<span class="st ' + statusOf(s) + '">' + STATUS[statusOf(s)].i + ' ' + STATUS[statusOf(s)].l + '</span>' : '<span class="badge">In progress</span>') + '</div>';
+
+    h += '<fieldset class="q"><legend>' + esc(a.conf) + '</legend><div class="chips">' +
+      CONF.map(function (c) { return '<label class="opt"><input type="radio" name="' + a.id + '-c" value="' + c.v + '"' + (s.c === c.v ? ' checked' : '') + ' data-act="conf" data-area="' + a.id + '" data-fid="' + a.id + '-c-' + c.v + '"><span>' + c.l + '</span></label>'; }).join('') +
+      '</div></fieldset>';
+
+    if (s.c) {
+      ['q1', 'q2'].forEach(function (k, idx) { h += question(a, s, k, idx); });
+      if (q3Visible(s)) h += question(a, s, 'q3', 2, true);
+      else if (s.a.q1 && s.a.q2) h += '<div class="note">A third question opens when at least one of these is a yes, so we can see how deep it goes.</div>';
+      if (blockersVisible(s)) {
+        h += '<fieldset class="q"><legend>What is getting in the way? Tick any that apply.</legend><div class="chips">' +
+          BLOCKERS.map(function (b, bi) { return '<label class="opt"><input type="checkbox" value="' + bi + '"' + (s.b.indexOf(bi) > -1 ? ' checked' : '') + ' data-act="block" data-area="' + a.id + '" data-fid="' + a.id + '-b' + bi + '"><span>' + esc(b) + '</span></label>'; }).join('') +
+          '</div></fieldset>';
+      }
+      if (done) {
+        var st = statusOf(s);
+        var msg = st === 'blind' ? 'You feel ' + (confN(s) >= 0.7 ? 'confident' : 'fairly sure') + ' here, but the evidence is thin. That gap is worth a conversation.'
+          : st === 'solid' ? (confN(s) <= 0.35 ? 'Better than you think: you have more evidence than your confidence suggests.' : 'You can back up your confidence with evidence.')
+          : st === 'gap' ? 'You sensed this one, and the answers agree. Good to know where to start.'
+          : 'Some of this is in place, some is not.';
+        h += '<div class="note"><b>' + STATUS[st].l + '.</b> ' + esc(msg) + '</div>';
+      }
+    }
+    return h + '</section>';
+  }
+  function question(a, s, k, idx, isNew) {
+    var fid = a.id + '-' + k;
+    return '<fieldset class="q' + (isNew && !seen[fid] ? ' reveal' : '') + '"><legend>' + esc(a.q[idx]) + '</legend><div class="chips">' +
+      ANS.map(function (x) { return '<label class="opt"><input type="radio" name="' + fid + '" value="' + x.v + '"' + (s.a[k] === x.v ? ' checked' : '') + ' data-act="ans" data-area="' + a.id + '" data-k="' + k + '" data-fid="' + fid + '-' + x.v + '"><span>' + x.l + '</span></label>'; }).join('') +
+      '</div></fieldset>';
+  }
+  function renderAreas() {
+    var ids = unlocked();
+    var box = document.getElementById('areas');
+    box.innerHTML = ids.map(function (id, i) { return areaCard(BY[id], i); }).join('');
+    ids.forEach(function (id) { seen[id] = true; ['q3'].forEach(function (k) { if (q3Visible(ar(id))) seen[id + '-' + k] = true; }); });
+
+    var rest = AREAS.filter(function (a) { return ids.indexOf(a.id) < 0; });
+    document.getElementById('s-more').hidden = !(ids.length && rest.length);
+    document.getElementById('more').innerHTML = rest.map(function (a) {
+      return '<button type="button" class="btn ghost" data-act="extra" data-area="' + a.id + '">+ ' + esc(a.title) + '</button>';
+    }).join('');
+
+    var doneN = ids.filter(function (id) { return complete(ar(id)); }).length;
+    document.getElementById('progress').hidden = !ids.length;
+    var pct = ids.length ? Math.round(doneN / ids.length * 100) : 0;
+    document.getElementById('pfill').style.width = pct + '%';
+    document.getElementById('pbar').setAttribute('aria-valuenow', pct);
+    document.getElementById('pcount').textContent = doneN + ' of ' + ids.length + ' sections done';
+    document.getElementById('pleft').textContent = ids.length - doneN === 0 && ids.length ? 'All open sections done' : (ids.length - doneN) + ' still open';
+    document.getElementById('s-go').hidden = !ids.length;
+    document.getElementById('go').disabled = !allDone();
+    document.getElementById('gomsg').textContent = allDone() ? '' : 'Finish the open sections to see your results.';
+  }
+
+  function priorityList() {
+    var rows = unlocked().map(function (id) {
+      var s = ar(id); var st = statusOf(s);
+      var sev = st === 'blind' ? 3 : st === 'gap' ? 2 : st === 'partial' ? 1 : 0;
+      return { id: id, st: st, sev: sev, gap: confN(s) - evidence(s), ev: evidence(s) };
+    }).filter(function (r) { return r.sev > 0; });
+    rows.sort(function (x, y) { return y.sev - x.sev || x.ev - y.ev; });
+    return rows;
+  }
+  function meter(a) {
+    var c = Math.round(confN(a) * 100), e = Math.round(evidence(a) * 100);
+    return '<div class="meter"><div class="c"><span>Confidence</span><b aria-hidden="true"><i style="width:' + c + '%"></i></b></div><div class="e"><span>Evidence</span><b aria-hidden="true"><i style="width:' + e + '%"></i></b></div></div>';
+  }
+  function code() {
+    var p = { v: 1, r: state.role, a: {} };
+    unlocked().forEach(function (id) {
+      var s = ar(id);
+      if (complete(s)) p.a[id] = { c: s.c, q: [s.a.q1 || '', s.a.q2 || '', s.a.q3 || ''], b: s.b };
+    });
+    return btoa(unescape(encodeURIComponent(JSON.stringify(p))));
+  }
+  function parse(txt) {
+    var p = JSON.parse(decodeURIComponent(escape(atob(String(txt).replace(/\s+/g, '')))));
+    if (!p || p.v !== 1 || typeof p.a !== 'object') throw new Error('bad');
+    var out = { r: String(p.r || 'Teammate').slice(0, 40), a: {} };
+    Object.keys(p.a).forEach(function (id) {
+      if (!BY[id]) return;
+      var x = p.a[id];
+      if (!CONF.some(function (c) { return c.v === x.c; })) return;
+      var q = (x.q || []).map(function (v) { return ['y', 'u', 'n'].indexOf(v) > -1 ? v : ''; });
+      if (!q[0] || !q[1]) return;
+      out.a[id] = { c: x.c, a: { q1: q[0], q2: q[1], q3: q[2] || undefined }, b: [] };
+    });
+    if (!Object.keys(out.a).length) throw new Error('empty');
+    return out;
+  }
+
+  function renderResults() {
+    var box = document.getElementById('results');
+    if (!(state.show && allDone())) { box.innerHTML = ''; return; }
+    var ids = unlocked();
+    var counts = { solid: 0, partial: 0, gap: 0, blind: 0 };
+    ids.forEach(function (id) { counts[statusOf(ar(id))]++; });
+    var h = '<section class="card" id="res" aria-labelledby="t-res"><div class="step">Your results' + (state.role ? ' · ' + esc(state.role) : '') + '</div><h2 id="t-res">' +
+      (counts.blind ? 'Your confidence runs ahead of your evidence in ' + counts.blind + (counts.blind === 1 ? ' area.' : ' areas.')
+        : counts.gap || counts.partial ? 'You can see where the work is.' : 'You can back up what you believe.') + '</h2>' +
+      '<p class="sub">You checked ' + ids.length + (ids.length === 1 ? ' area' : ' areas') + ': ' + counts.solid + ' solid, ' + counts.partial + ' partly there, ' + counts.gap + ' known ' + (counts.gap === 1 ? 'gap' : 'gaps') + ', ' + counts.blind + ' blind ' + (counts.blind === 1 ? 'spot' : 'spots') + '. A blind spot means you feel confident but could not show the evidence.</p>';
+    h += '<div class="map">' + ids.map(function (id) {
+      var s = ar(id), st = statusOf(s);
+      return '<div class="mrow"><div class="nm">' + esc(BY[id].title) + '</div>' + meter(s) + '<span class="st ' + st + '">' + STATUS[st].i + ' ' + STATUS[st].l + '</span></div>';
+    }).join('') + '</div></section>';
+
+    var pr = priorityList().slice(0, 3);
+    if (pr.length) {
+      h += '<section class="card" aria-labelledby="t-pr"><h2 id="t-pr">What to do first</h2><div class="prio">' + pr.map(function (r) {
+        return '<div><div><h3>' + esc(BY[r.id].title) + '</h3><p class="sub">' + esc(BY[r.id].advice) + '</p></div></div>';
+      }).join('') + '</div></section>';
+    }
+    var tally = {};
+    ids.forEach(function (id) { ar(id).b.forEach(function (b) { tally[b] = (tally[b] || 0) + 1; }); });
+    var tk = Object.keys(tally).sort(function (x, y) { return tally[y] - tally[x]; }).slice(0, 3);
+    if (tk.length) {
+      h += '<section class="card"><h2>What gets in the way</h2><p class="sub">' + tk.map(function (b) { return esc(BLOCKERS[b]) + ' (' + tally[b] + ')'; }).join(', ') + '.</p></section>';
+    }
+    h += '<section class="card" aria-labelledby="t-cmp"><h2 id="t-cmp">Compare with a colleague</h2>' +
+      '<p class="sub">The most useful result is where two people disagree. Ask a colleague to take this check on their own, then swap codes. The code holds only answers, never names, and comparing happens in this browser.</p>' +
+      '<div><b>Your code</b></div><textarea id="mycode" readonly aria-label="Your results code">' + esc(code()) + '</textarea>' +
+      '<div class="row"><button type="button" class="btn ghost" data-act="copy">Copy my code</button><span class="msg" id="copymsg" role="status"></span></div>' +
+      '<div><b>Your colleague’s code</b></div><textarea id="theircode" aria-label="Your colleague’s results code" placeholder="Paste their code here"></textarea>' +
+      '<div class="row"><button type="button" class="btn" data-act="compare">Compare</button><span class="msg" id="cmpmsg" role="status"></span></div><div id="cmp"></div></section>';
+    h += '<section class="card cta"><h2>Want to talk it through?</h2><p>Most of these gaps come down to one thing: writing down what correct means, and checking AI work against it. That is what Transform Loop helps teams do. A free conversation, no pitch.</p><a class="btn" href="' + BOOK_URL + '" rel="noopener">Talk it through</a></section>';
+    h += '<section class="card"><div class="row"><button type="button" class="btn ghost" data-act="edit">Change my answers</button><button type="button" class="btn ghost" data-act="reset">Start over</button></div></section>';
+    box.innerHTML = h;
+  }
+
+  function renderCompare(them) {
+    var mine = {}; unlocked().forEach(function (id) { if (complete(ar(id))) mine[id] = ar(id); });
+    var all = AREAS.filter(function (a) { return mine[a.id] || them.a[a.id]; });
+    var rows = all.map(function (a) {
+      var m = mine[a.id], t = them.a[a.id];
+      var both = !!(m && t);
+      var sm = m ? statusOf(m) : null, stt = t ? statusOf(t) : null;
+      var differ = both && (sm !== stt || Math.abs(confN(m) - confN(t)) >= 0.5);
+      return { a: a, m: m, t: t, sm: sm, st: stt, both: both, differ: differ };
+    });
+    rows.sort(function (x, y) { return (y.differ ? 1 : 0) - (x.differ ? 1 : 0); });
+    var shared = rows.filter(function (r) { return r.both; });
+    var diff = shared.filter(function (r) { return r.differ; });
+    var me = state.role || 'You', th = them.r;
+    function cell(s, st) { return s ? '<span class="st ' + st + '">' + STATUS[st].i + ' ' + STATUS[st].l + '</span><br><small>' + Math.round(confN(s) * 100) + '% confident</small>' : '<small>Not checked</small>'; }
+    var h = '<p class="sub" style="margin-top:8px"><b>' + (shared.length ? 'You differ on ' + diff.length + ' of ' + shared.length + ' shared ' + (shared.length === 1 ? 'area' : 'areas') + '.' : 'You did not check any of the same areas.') + '</b> ' + (diff.length ? 'Start the conversation there.' : shared.length ? 'You see it the same way.' : 'Open more sections to find overlap.') + '</p>' +
+      '<div style="overflow-x:auto"><table><thead><tr><th>Area</th><th>' + esc(me) + ' (you)</th><th>' + esc(th) + '</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr class="' + (r.differ ? 'differ' : '') + '"><td><b>' + esc(r.a.title) + '</b>' + (r.differ ? '<br><small>You see this differently</small>' : '') + '</td><td>' + cell(r.m, r.sm) + '</td><td>' + cell(r.t, r.st) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+    document.getElementById('cmp').innerHTML = h;
+  }
+
+  function renderAll() {
+    var focusId = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute('data-fid') : null;
+    var theirs = document.getElementById('theircode') ? document.getElementById('theircode').value : '';
+    renderRoles(); renderPicks();
+    document.getElementById('s-mind').hidden = !state.role;
+    renderAreas(); renderResults();
+    var t = document.getElementById('theircode'); if (t && theirs) t.value = theirs;
+    if (focusId) { var el = document.querySelector('[data-fid="' + focusId + '"]'); if (el) el.focus({ preventScroll: true }); }
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('change', function (e) {
+    var t = e.target, act = t.getAttribute && t.getAttribute('data-act');
+    if (!act) return;
+    var id = t.getAttribute('data-area');
+    if (act === 'role') { state.role = t.value; }
+    else if (act === 'pick') {
+      var i = state.picks.indexOf(t.value);
+      if (t.checked && i < 0) { state.picks.push(t.value); state.basics = false; }
+      if (!t.checked && i > -1) state.picks.splice(i, 1);
+    } else if (act === 'basics') {
+      state.basics = t.checked; if (t.checked) state.picks = [];
+    } else if (act === 'conf') { ar(id).c = t.value; afterAnswer(id); }
+    else if (act === 'ans') { ar(id).a[t.getAttribute('data-k')] = t.value; afterAnswer(id); }
+    else if (act === 'block') {
+      var b = ar(id).b, n = parseInt(t.value, 10), j = b.indexOf(n);
+      if (t.checked && j < 0) b.push(n); if (!t.checked && j > -1) b.splice(j, 1);
+    }
+    state.show = state.show && allDone();
+    save(); renderAll();
+  });
+  function afterAnswer(id) {
+    var s = ar(id);
+    if (!q3Visible(s)) delete s.a.q3;
+    if (complete(s)) {
+      var st = statusOf(s), rel = BY[id].rel;
+      if ((st === 'blind' || st === 'gap') && rel && unlocked().indexOf(rel) < 0) state.auto[rel] = id;
+    }
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!t || t.tagName === 'INPUT') return;
+    var act = t.getAttribute('data-act');
+    if (act === 'extra') { state.extra.push(t.getAttribute('data-area')); save(); renderAll(); }
+    else if (act === 'results') {
+      if (!allDone()) return; state.show = true; save(); renderAll();
+      var r = document.getElementById('res'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (act === 'edit') { state.show = false; save(); renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else if (act === 'reset') { state = fresh(); seen = {}; save(); renderAll(); window.scrollTo({ top: 0 }); }
+    else if (act === 'copy') {
+      var m = document.getElementById('copymsg'), v = document.getElementById('mycode').value;
+      var ok = function () { m.textContent = 'Copied.'; };
+      var no = function () { var ta = document.getElementById('mycode'); ta.focus(); ta.select(); m.textContent = 'Select the text and copy it.'; };
+      try { navigator.clipboard.writeText(v).then(ok, no); } catch (x) { no(); }
+    } else if (act === 'compare') {
+      var cm = document.getElementById('cmpmsg'); cm.className = 'msg'; cm.textContent = '';
+      try { renderCompare(parse(document.getElementById('theircode').value)); }
+      catch (x) { document.getElementById('cmp').innerHTML = ''; cm.className = 'msg err'; cm.textContent = 'That code did not work. Ask your colleague to copy it again.'; }
+    }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

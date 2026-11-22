@@ -36,11 +36,12 @@ Decisions and reasons:
 # Golden checks (the health gate runs these)
 1. The headline reads: Get more from your AI budget, with code you can trust.
 2. There are exactly five gates (Write, Retrieval, Use, Health, Freshness).
-3. Every Book a call button leads to the real booking link (see open items).
+3. Every call-to-action button leads to a real destination (LinkedIn for now, see open items). No placeholder links.
 4. No performance numbers, no returns, no client names, no employer references anywhere.
 5. The page works at phone width with no sideways scrolling (checked by hand for now).
 
 # Open items
-- Booking link is still the placeholder https://calendly.com/. Replace with the real link.
-- Headshot is still the placeholder initials AC. Replace with a real photo.
+- No booking link yet: the call-to-action sends people to LinkedIn. Replace with a booking link when one exists.
+- No headshot: the About section has no photo for now. Add one when available.
 - Domain: transformloop.ai is pointed at this site (DNS at the registrar, custom domain and HTTPS in GitHub Pages). Done 2026-11-22.
+- AI Build Check lives at /build-check/ (build-check/index.html). Answers stay in the visitor's browser and nothing is sent anywhere. No email capture yet; it arrives with the email platform. Added 2026-11-22.
