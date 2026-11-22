@@ -1,4 +1,4 @@
-Owner: Anil Chintalacheruvu
+Owner: mailanilkumar
 Why: Defines how agents build code in this repository: they retrieve context through an MCP server, record what they retrieved in a receipt, and the use gate checks the receipt.
 Covers: mcp/context_server.py mcp/verify_receipt.py
 Status: built and tested locally; wired into the Context gate workflow
