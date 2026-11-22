@@ -7,12 +7,19 @@ Status: live content, two open items (see bottom)
 
 transformloop.ai is AI-native from day one. Nothing goes into the code without context. The context itself goes through every required gate, including the retrieval gate:
 - Write gate: every context file names an Owner, the Why and what it Covers. Checked on every change.
-- Retrieval gate: every code file is covered by a context file, so whoever or whatever changes it can always retrieve the right context first. Checked on every change.
-- Use gate: a change to code must update the context that covers it, in the same change. Checked on every change.
-- Freshness gate: context that was retrieved must not go stale before the change lands. Covered by the use gate for now (same change updates both).
+- Retrieval gate: every code file is covered by a context file, and agents retrieve that context through the MCP context server before they change the code. Checked on every change.
+- Use gate: a change to code must update the context that covers it in the same change, and must carry a receipt of the context the agent retrieved. Checked on every change.
+- Freshness gate: the receipt must name the version of the context that was current before the change. A stale version fails. Checked on every change.
 - Health gate: golden checks (below) run against the live site once in a while, on a schedule, not on every change. When one fails, the context or the site gets fixed.
 
 These are enforced by GitHub workflows in .github/workflows: context-gate.yml (every change) and health.yml (scheduled).
+
+# How agents build here (standing rule)
+
+- The agent that builds the code is the same agent that retrieves the context. It never works from memory or from the whole repository.
+- Retrieval goes through an MCP context server. The agent asks for the context covering the files it is about to touch and gets back only that context, with the version (hash) of each context file.
+- Every retrieval is recorded in a receipt. The details of what was retrieved are checked again at the use gate.
+- Status: built. The server, the receipt and the checks are described in context/agents.md.
 
 # Feature: one-page site (index.html)
 
@@ -36,10 +43,4 @@ Decisions and reasons:
 # Open items
 - Booking link is still the placeholder https://calendly.com/. Replace with the real link.
 - Headshot is still the placeholder initials AC. Replace with a real photo.
-# How agents build here (standing rule)
-
-- The agent that builds the code is the same agent that retrieves the context. It never works from memory or from the whole repository.
-- Retrieval goes through an MCP context server (the retrieval gate). The agent asks for the context covering the files it is about to touch and gets back only that context, with the version (hash) of each context file.
-- Every retrieval is recorded. The details of what was retrieved are checked again at the use gate: a change must carry a receipt listing the context files and versions it relied on. The gate confirms the receipt matches the current context (freshness) and that the change updates that context when behavior changes.
-- The health gate keeps running on its schedule, separate from changes.
-- Status: design agreed, not built yet. Today the workflows enforce the write gate, retrieval coverage and the same-change use gate. The MCP context server and the retrieval receipts are the next build, and they will be added to this file first.
+- The domain transformloop.ai is not yet pointed at this site (DNS and the custom domain setting in GitHub Pages).
