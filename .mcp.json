@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "transformloop-context": {
+      "command": "python3",
+      "args": ["mcp/context_server.py"]
+    }
+  }
+}
