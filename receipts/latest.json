@@ -1,13 +1,14 @@
 {
-  "summary": "Reader shows results as a readable table",
+  "summary": "Move reader to build-check-reader and add download button",
   "files_touched": [
+    "build-check-reader/index.html",
     "reader/index.html"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "10e0590d1244dc4f249af07e155732652e0cad2645c89efd29584ed3701c33d0"
+      "sha256": "65f0652b6882689cf9c67dd9ab7e2673c1a4b3bd2e017d6e78cebacf2b2c84ee"
     }
   ],
-  "time": "2026-11-23T02:58:22Z"
+  "time": "2026-11-23T03:06:21Z"
 }

@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>Reader</title>
+<meta name="robots" content="noindex"><title>Build Check reader</title>
 <style>
 body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#111}
 textarea,input[type=file]{width:100%;margin:6px 0 14px}textarea{min-height:110px;font:12px ui-monospace,monospace}
 button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b57d0;color:#fff;cursor:pointer}
 .co{border:1px solid #ccc;border-radius:10px;padding:12px;margin:12px 0}.m{color:#a00}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}pre{white-space:pre-wrap;word-break:break-all;font-size:12px}
 </style></head><body>
-<h1>Reader</h1>
+<h1>Build Check reader</h1>
 <p>Decrypts in this browser only. Nothing is uploaded. Choose your private key file, then paste the encrypted submissions (one per line).</p>
 <label><b>Private key file</b><input id="kf" type="file" accept=".json"></label>
 <label><b>Encrypted submissions</b><textarea id="blobs" placeholder="One JSON blob per line"></textarea></label>
 <button id="go" type="button">Decrypt</button> <span id="msg" class="m" role="status"></span>
+<button id="dl" type="button" hidden>Download readable results</button>
 <div id="out"></div>
 <script>
 (function () {
@@ -31,6 +32,27 @@ button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b
     } catch (e) { return '<pre>' + esc(code) + '</pre>'; }
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function mdFor(r) {
+    var out = '### ' + (r.role || 'Role not given') + ' (' + r.email + ', ' + r.at + ')\n\n| Area | Confidence | Evidence answers | Blockers |\n|---|---|---|---|\n';
+    try {
+      var p = JSON.parse(decodeURIComponent(escape(atob(String(r.code).replace(/\s+/g, '')))));
+      Object.keys(p.a || {}).forEach(function (id) {
+        var x = p.a[id];
+        out += '| ' + (T[id] || id) + ' | ' + (C[x.c] || x.c) + ' | ' + (x.q || []).filter(Boolean).map(function (v) { return A[v] || v; }).join(', ') + ' | ' + (x.b || []).map(function (i) { return B[i] != null ? B[i] : i; }).join(', ') + ' |\n';
+      });
+    } catch (e) { out += 'Results code could not be read: ' + r.code + '\n'; }
+    return out + '\n';
+  }
+  document.getElementById('dl').onclick = function () {
+    var g = {}; (window.__rows || []).forEach(function (r) { var k = String(r.company).toLowerCase(); (g[k] = g[k] || { n: r.company, r: [] }).r.push(r); });
+    var md = '# Build Check results\n\nDownloaded ' + new Date().toISOString() + '\n\n' + Object.keys(g).sort().map(function (k) {
+      return '## ' + g[k].n + '\n\n' + g[k].r.map(mdFor).join('');
+    }).join('');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+    a.download = 'build-check-results-' + new Date().toISOString().slice(0, 10) + '.md';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
   document.getElementById('go').onclick = function () {
     var msg = document.getElementById('msg'), out = document.getElementById('out'); msg.textContent = ''; out.innerHTML = '';
     var f = document.getElementById('kf').files[0];
@@ -49,13 +71,14 @@ button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b
         }).catch(function () { return null; });
       }));
     }).then(function (rows) {
-      var bad = rows.filter(function (r) { return !r; }).length, g = {};
+      var bad = rows.filter(function (r) { return !r; }).length, g = {}; window.__rows = rows.filter(Boolean);
       rows.filter(Boolean).forEach(function (r) { var k = String(r.company).toLowerCase(); (g[k] = g[k] || { n: r.company, r: [] }).r.push(r); });
       out.innerHTML = Object.keys(g).sort().map(function (k) {
         return '<div class="co"><h2>' + esc(g[k].n) + ' (' + g[k].r.length + ')</h2>' + g[k].r.map(function (r) {
           return '<p><b>' + esc(r.role || 'Role not given') + '</b> · ' + esc(r.email) + ' · ' + esc(r.at) + '</p>' + readable(r.code);
         }).join('') + '</div>';
       }).join('');
+      document.getElementById('dl').hidden = !window.__rows.length;
       if (bad) msg.textContent = bad + ' could not be decrypted.';
     }).catch(function () { msg.textContent = 'That key file did not work.'; });
   };
