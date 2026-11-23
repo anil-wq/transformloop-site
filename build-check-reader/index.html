@@ -5,7 +5,7 @@
 body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#111}
 textarea,input[type=file]{width:100%;margin:6px 0 14px}textarea{min-height:110px;font:12px ui-monospace,monospace}
 button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b57d0;color:#fff;cursor:pointer}
-.co{border:1px solid #ccc;border-radius:10px;padding:12px;margin:12px 0}.m{color:#a00}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}pre{white-space:pre-wrap;word-break:break-all;font-size:12px}
+.co{border:1px solid #ccc;border-radius:10px;padding:12px;margin:12px 0}.m{color:#a00}h3{margin:14px 0 4px}ul{margin:0 0 8px;padding-left:20px}pre{white-space:pre-wrap;word-break:break-all;font-size:12px}
 </style></head><body>
 <h1>Build Check reader</h1>
 <p>Decrypts in this browser only. Nothing is uploaded. Choose your private key file, then paste the encrypted submissions (one per line).</p>
@@ -21,24 +21,31 @@ button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b
   var C = { very: 'Very confident', fairly: 'Fairly confident', not: 'Not very confident', unsure: 'Not sure at all' };
   var A = { y: 'Yes', u: 'Not sure', n: 'No' };
   var B = ['Nobody owns it', 'No time', 'We do not know how', 'Not a priority', 'Tools do not support it', 'Assumed the AI handled it'];
+  var Q = {"define":{"title":"What \"done\" means","conf":"How confident are you that everyone agrees on what \"done\" and \"correct\" mean?","q":["Is there a written definition of what correct looks like, in plain words?","Do you know which behaviours must match exactly, and which are allowed to change?","Could someone outside the team read it and tell whether you have reached it?"]},"intent":{"title":"The \"why\" behind the code","conf":"How confident are you that the reasons behind your code are known and written down?","q":["For your most important features, is the reason they work the way they do written down?","When AI changes code, does it receive that reason, or only the code?","Is that reason kept up to date by a named person?"]},"proof":{"title":"Proof it works","conf":"How confident are you that problems are found before customers find them?","q":["Do automated tests run before every release?","Are those tests built from real customer cases, including the odd ones?","Do you usually find problems before your customers do?"]},"owner":{"title":"Ownership and understanding","conf":"How confident are you that the knowledge does not live in one or two heads?","q":["Could at least two people explain how each major feature works?","Does every major feature have a named owner?","Is there a check that catches a wrong AI change without relying on one person\u2019s memory?"]},"dates":{"title":"Confidence in the date","conf":"How confident are you in your next release date?","q":["Is your next release date based on measured progress, not a promise?","Would the people closest to the work give about the same confidence as leadership?","Is there an agreed plan, and a named decider, if the date slips?"]},"spend":{"title":"AI spend and value","conf":"How confident are you that your AI spend is delivering value?","q":["Can you see what you spend on AI tools and tokens, by team or by project?","Do you know what that spend has bought: faster delivery, fewer bugs, or both?","Have you tried smaller models or less context for work that does not need the best?"]},"guard":{"title":"Data and guardrails","conf":"How confident are you that AI tools only see the data and code they are allowed to?","q":["Is it clear which data and code AI tools are allowed to see?","Is that enforced by the system, not just by people remembering?","Can you trace what the AI used when it made a change?"]},"parity":{"title":"Old versus new","conf":"How confident are you that the new version behaves like the old one where it should?","q":["Do you have a list of what the old system did, to check the new one against?","Do you run old and new on the same inputs and compare the results?","Can you say today what share of the old behaviour is confirmed to match?"]}};
+  function parts(code) { return JSON.parse(decodeURIComponent(escape(atob(String(code).replace(/\s+/g, ''))))); }
   function readable(code) {
     try {
-      var p = JSON.parse(decodeURIComponent(escape(atob(String(code).replace(/\s+/g, ''))))), rows = '';
+      var p = parts(code), h = '';
       Object.keys(p.a || {}).forEach(function (id) {
-        var x = p.a[id];
-        rows += '<tr><td>' + esc(T[id] || id) + '</td><td>' + esc(C[x.c] || x.c) + '</td><td>' + (x.q || []).filter(Boolean).map(function (v) { return esc(A[v] || v); }).join(', ') + '</td><td>' + (x.b || []).map(function (i) { return esc(B[i] != null ? B[i] : i); }).join(', ') + '</td></tr>';
+        var x = p.a[id], q = Q[id] || { title: id, conf: '', q: [] };
+        h += '<h3>' + esc(q.title) + '</h3><ul><li>' + esc(q.conf || 'Confidence') + ' <b>' + esc(C[x.c] || x.c) + '</b></li>' +
+          (x.q || []).map(function (v, i) { return v ? '<li>' + esc(q.q[i] || 'Question ' + (i + 1)) + ' <b>' + esc(A[v] || v) + '</b></li>' : ''; }).join('') +
+          ((x.b || []).length ? '<li>What gets in the way: ' + x.b.map(function (i) { return esc(B[i] != null ? B[i] : i); }).join(', ') + '</li>' : '') + '</ul>';
       });
-      return '<table><tr><th>Area</th><th>Confidence</th><th>Evidence answers</th><th>Blockers</th></tr>' + rows + '</table>';
+      return h;
     } catch (e) { return '<pre>' + esc(code) + '</pre>'; }
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function mdFor(r) {
-    var out = '### ' + (r.role || 'Role not given') + ' (' + r.email + ', ' + r.at + ')\n\n| Area | Confidence | Evidence answers | Blockers |\n|---|---|---|---|\n';
+    var out = '### ' + (r.role || 'Role not given') + ' (' + r.email + ', ' + r.at + ')\n\n';
     try {
-      var p = JSON.parse(decodeURIComponent(escape(atob(String(r.code).replace(/\s+/g, '')))));
+      var p = parts(r.code);
       Object.keys(p.a || {}).forEach(function (id) {
-        var x = p.a[id];
-        out += '| ' + (T[id] || id) + ' | ' + (C[x.c] || x.c) + ' | ' + (x.q || []).filter(Boolean).map(function (v) { return A[v] || v; }).join(', ') + ' | ' + (x.b || []).map(function (i) { return B[i] != null ? B[i] : i; }).join(', ') + ' |\n';
+        var x = p.a[id], q = Q[id] || { title: id, conf: '', q: [] };
+        out += '#### ' + q.title + '\n\n- ' + (q.conf || 'Confidence') + ' **' + (C[x.c] || x.c) + '**\n';
+        (x.q || []).forEach(function (v, i) { if (v) out += '- ' + (q.q[i] || 'Question ' + (i + 1)) + ' **' + (A[v] || v) + '**\n'; });
+        if ((x.b || []).length) out += '- What gets in the way: ' + x.b.map(function (i) { return B[i] != null ? B[i] : i; }).join(', ') + '\n';
+        out += '\n';
       });
     } catch (e) { out += 'Results code could not be read: ' + r.code + '\n'; }
     return out + '\n';
