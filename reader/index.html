@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Reader</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#111}
+textarea,input[type=file]{width:100%;margin:6px 0 14px}textarea{min-height:110px;font:12px ui-monospace,monospace}
+button{font:inherit;padding:10px 16px;border-radius:10px;border:0;background:#0b57d0;color:#fff;cursor:pointer}
+.co{border:1px solid #ccc;border-radius:10px;padding:12px;margin:12px 0}.m{color:#a00}pre{white-space:pre-wrap;word-break:break-all;font-size:12px}
+</style></head><body>
+<h1>Reader</h1>
+<p>Decrypts in this browser only. Nothing is uploaded. Choose your private key file, then paste the encrypted submissions (one per line).</p>
+<label><b>Private key file</b><input id="kf" type="file" accept=".json"></label>
+<label><b>Encrypted submissions</b><textarea id="blobs" placeholder="One JSON blob per line"></textarea></label>
+<button id="go" type="button">Decrypt</button> <span id="msg" class="m" role="status"></span>
+<div id="out"></div>
+<script>
+(function () {
+  function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  document.getElementById('go').onclick = function () {
+    var msg = document.getElementById('msg'), out = document.getElementById('out'); msg.textContent = ''; out.innerHTML = '';
+    var f = document.getElementById('kf').files[0];
+    if (!f) { msg.textContent = 'Choose the key file.'; return; }
+    f.text().then(function (t) {
+      return crypto.subtle.importKey('jwk', JSON.parse(t), { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']);
+    }).then(function (priv) {
+      var lines = document.getElementById('blobs').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      return Promise.all(lines.map(function (l) {
+        return Promise.resolve().then(function () {
+          var b = JSON.parse(l);
+          return crypto.subtle.decrypt({ name: 'RSA-OAEP' }, priv, u8(b.k)).then(function (raw) {
+            return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+          }).then(function (k) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(b.iv) }, k, u8(b.ct)); })
+            .then(function (p) { return JSON.parse(new TextDecoder().decode(p)); });
+        }).catch(function () { return null; });
+      }));
+    }).then(function (rows) {
+      var bad = rows.filter(function (r) { return !r; }).length, g = {};
+      rows.filter(Boolean).forEach(function (r) { var k = String(r.company).toLowerCase(); (g[k] = g[k] || { n: r.company, r: [] }).r.push(r); });
+      out.innerHTML = Object.keys(g).sort().map(function (k) {
+        return '<div class="co"><h2>' + esc(g[k].n) + ' (' + g[k].r.length + ')</h2>' + g[k].r.map(function (r) {
+          return '<p><b>' + esc(r.role || 'Role not given') + '</b> · ' + esc(r.email) + ' · ' + esc(r.at) + '</p><pre>' + esc(r.code) + '</pre>';
+        }).join('') + '</div>';
+      }).join('');
+      if (bad) msg.textContent = bad + ' could not be decrypted.';
+    }).catch(function () { msg.textContent = 'That key file did not work.'; });
+  };
+})();
+</script></body></html>

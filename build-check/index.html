@@ -104,6 +104,8 @@ fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
 .prio > div { display: grid; grid-template-columns: 32px 1fr; gap: 12px; }
 .prio > div::before { counter-increment: p; content: counter(p); width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 600; }
 textarea { width: 100%; min-height: 84px; resize: vertical; font: 0.82rem/1.4 ui-monospace, Menlo, Consolas, monospace; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; word-break: break-all; }
+input[type=text], input[type=email] { width: 100%; display: block; margin: 4px 0 12px; font: inherit; color: var(--fg); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; }
+input[type=text]:focus-visible, input[type=email]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -188,6 +190,10 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
 (function () {
   var KEY = 'tl-build-check-v1';
   var BOOK_URL = 'https://transformloop.ai/#contact';
+  // Encrypted send. SEND_URL is the Cloudflare Worker address; empty until it is deployed (the send form stays hidden).
+  var SEND_URL = '';
+  var TURNSTILE_KEY = '0x4AAAAAAGOKmoMhIq-y0P3q';
+  var PUBLIC_KEY = {"alg":"RSA-OAEP-256","kty":"RSA","n":"69F0_xAUlEYl5xC-Hb2vYcQ6qA5t6luyJCKtU9D8Jzbk2mOCEZlmAZdoaRU9bZgNYyZNOk5woJlyDKJ-el2SkxRSo6AfvLVCYVLMd6BsEE5VVRO4Pg3Vt-G0dhOZHoUfhxVUbJDvkghsTXTVJ--ifn-2zQVUwiB87B_ORt_-a9gtUwI1WobwBc-XT94y6KZ5mn7yj15fdNa7latlMrquIEpfUkrXTZz7ukSZ8TR_PKDPK6jQ8EZKNltreetpM96AhB0fOnXWTaxDzFf7hP7W4jwoj8aXF1kHPPvQOErCAmolajsnPNl9muH4_Rea0uNi8RiRveZfzmXYxo6xJ4HX92ti7JfsAle3ZOkDRl0XIjDCpt3-puC7AG6p5ZDdX2kcoXi_dA7dy6Ho5TRog-ObMoKNvlA7-Q5G8x2BrMI2wPbxjXIU_RMfbH_u7n1PtH6nO4nUg3cirCN4eVv-X-15RtdLKflywfiEEevvsLn53m1ODxkdOQBBT09Wzp250Vlx","e":"AQAB"};
 
   var ROLES = ['CEO', 'CTO', 'COO', 'Engineering or product leader', 'Other'];
 
@@ -461,6 +467,14 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       '<div class="row"><button type="button" class="btn ghost" data-act="copy">Copy my code</button><span class="msg" id="copymsg" role="status"></span></div>' +
       '<div><b>Your colleagues’ codes</b></div><textarea id="theircode" aria-label="Your colleagues’ results codes" placeholder="Paste one code per line"></textarea>' +
       '<div class="row"><button type="button" class="btn" data-act="compare">Compare</button><span class="msg" id="cmpmsg" role="status"></span></div><div id="cmp"></div></section>';
+    if (SEND_URL) {
+      h += '<section class="card" id="sendbox" aria-labelledby="t-send"><h2 id="t-send">Share your results with Transform Loop (optional)</h2>' +
+        '<p class="sub">Nothing has left your browser so far. If you choose to send, your answers, company name and email are locked in your browser with a key only Transform Loop holds. We use them to follow up and to learn which problems teams most want solved.</p>' +
+        '<div id="sendform" hidden><label for="sc"><b>Company</b></label><input id="sc" type="text" maxlength="80" autocomplete="organization">' +
+        '<label for="se"><b>Work email</b></label><input id="se" type="email" maxlength="120" autocomplete="email">' +
+        '<div id="ts" style="margin:10px 0"></div></div>' +
+        '<div class="row"><button type="button" class="btn" data-act="sendopen">Send my results</button><span class="msg" id="sendmsg" role="status"></span></div></section>';
+    }
     h += '<section class="card cta"><h2>Want to talk it through?</h2><p>Most of these gaps come down to one thing: writing down what correct means, and checking AI work against it. That is what Transform Loop helps teams do. A free conversation, no pitch.</p><a class="btn" href="' + BOOK_URL + '" rel="noopener">Talk it through</a></section>';
     h += '<section class="card"><div class="row"><button type="button" class="btn ghost" data-act="edit">Change my answers</button><button type="button" class="btn ghost" data-act="reset">Start over</button></div></section>';
     box.innerHTML = h;
@@ -546,7 +560,8 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       var ok = function () { m.textContent = 'Copied.'; };
       var no = function () { var ta = document.getElementById('mycode'); ta.focus(); ta.select(); m.textContent = 'Select the text and copy it.'; };
       try { navigator.clipboard.writeText(v).then(ok, no); } catch (x) { no(); }
-    } else if (act === 'compare') {
+    } else if (act === 'sendopen') { sendFlow(); }
+    else if (act === 'compare') {
       var cm = document.getElementById('cmpmsg'); cm.className = 'msg'; cm.textContent = '';
       try {
         var codes = document.getElementById('theircode').value.split(/\s+/).filter(Boolean);
@@ -556,6 +571,52 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       catch (x) { document.getElementById('cmp').innerHTML = ''; cm.className = 'msg err'; cm.textContent = 'One of the codes did not work. Paste one code per line, up to four, and ask your colleague to copy it again if needed.'; }
     }
   });
+
+  // ---- Encrypted send: AES-GCM for the data, RSA-OAEP wraps the key. Only the private key can open it.
+  function b64(buf) { var a = new Uint8Array(buf), s = ''; for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  var tsId = null, tsLoading = false, tsToken = '';
+  function loadTurnstile(cb) {
+    if (window.turnstile) return cb();
+    if (tsLoading) return;
+    tsLoading = true;
+    var sc = document.createElement('script');
+    sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    sc.onload = cb; sc.onerror = function () { tsLoading = false; setSend('Could not load the bot check. Try again.', true); };
+    document.head.appendChild(sc);
+  }
+  function setSend(t, err) { var m = document.getElementById('sendmsg'); if (m) { m.className = err ? 'msg err' : 'msg'; m.textContent = t; } }
+  function sendFlow() {
+    var f = document.getElementById('sendform');
+    if (f.hidden) {
+      f.hidden = false;
+      loadTurnstile(function () {
+        if (tsId === null) tsId = window.turnstile.render('#ts', { sitekey: TURNSTILE_KEY, callback: function (t) { tsToken = t; } });
+      });
+      setSend('Fill in both fields, pass the check, then press Send again.');
+      return;
+    }
+    var company = document.getElementById('sc').value.trim(), email = document.getElementById('se').value.trim();
+    if (!company || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setSend('Add your company and a valid work email.', true); return; }
+    if (!tsToken) { setSend('Pass the bot check first.', true); return; }
+    if (!(window.crypto && crypto.subtle)) { setSend('This browser cannot lock the data, so nothing was sent.', true); return; }
+    setSend('Sending…');
+    var payload = JSON.stringify({ company: company, email: email, role: state.role || '', code: code(), at: new Date().toISOString() });
+    var enc = new TextEncoder();
+    crypto.subtle.importKey('jwk', PUBLIC_KEY, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']).then(function (pub) {
+      return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']).then(function (aes) {
+        var iv = crypto.getRandomValues(new Uint8Array(12));
+        return Promise.all([
+          crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, aes, enc.encode(payload)),
+          crypto.subtle.exportKey('raw', aes).then(function (raw) { return crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pub, raw); })
+        ]).then(function (r) { return { v: 1, iv: b64(iv), ct: b64(r[0]), k: b64(r[1]) }; });
+      });
+    }).then(function (blob) {
+      return fetch(SEND_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: tsToken, blob: blob }) });
+    }).then(function (res) {
+      if (!res.ok) throw new Error('fail');
+      document.getElementById('sendbox').innerHTML = '<h2>Sent. Thank you.</h2><p class="sub">Your results were locked in your browser before they were sent. I will follow up by email.</p>';
+    }).catch(function () { tsToken = ''; try { window.turnstile.reset(tsId); } catch (x) {} setSend('That did not go through. Nothing was lost; try again.', true); });
+  }
 
   renderAll();
 })();

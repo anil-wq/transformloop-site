@@ -1,13 +1,15 @@
 {
-  "summary": "Build Check compares up to four people (CEO, CTO, COO and more)",
+  "summary": "Encrypted send: Build Check send form, Worker, reader page",
   "files_touched": [
-    "build-check/index.html"
+    "build-check/index.html",
+    "reader/index.html",
+    "worker/worker.js"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "0be7b434b6ebd97795d0c4d9e3c3b95e3c2b479e90d8bf842b12cb04a34c9666"
+      "sha256": "795d95513270f1b8a44299257fd524e02e925619a2150ffdfa56e9b2c828b043"
     }
   ],
-  "time": "2026-11-22T23:53:34Z"
+  "time": "2026-11-23T02:26:11Z"
 }
