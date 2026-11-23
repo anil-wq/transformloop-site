@@ -1,6 +1,6 @@
 Owner: mailanilkumar
 Why: Defines what the Transform Loop website is for, what AI-native means here, the decisions behind it, and the checks it must keep passing.
-Covers: index.html, build-check/index.html
+Covers: index.html, build-check/index.html, worker/worker.js, reader/index.html
 Status: live content, Build Check live at /build-check/, open items at bottom
 
 # What AI-native means here (standing rule)
@@ -31,7 +31,7 @@ Decisions and reasons:
 - Proof section describes how the trading platform was built (process only). It never shows strategy, trades, returns or performance numbers. Reason: that is private and not the point.
 - No client is named on the site without that client's written approval.
 - Nothing on the site may relate to the business of any current or former employer.
-- Single static file, no tracking, no form that collects data. Reason: nothing to leak, free hosting, nobody in the middle of visitors' information.
+- Single static file, no tracking, no form that collects data on the home page. Reason: nothing to leak, free hosting, nobody in the middle of visitors' information. The one exception is the opt-in encrypted send in the Build Check (see Open items): nothing leaves the browser unless the visitor chooses to send.
 
 # Golden checks (the health gate runs these)
 1. The headline reads: Get more from your AI budget, with code you can trust.
@@ -46,3 +46,4 @@ Decisions and reasons:
 - Domain: transformloop.ai is pointed at this site (DNS at the registrar, custom domain and HTTPS in GitHub Pages). Done 2026-11-22.
 - AI Build Check lives at /build-check/ (build-check/index.html). Answers stay in the visitor's browser and nothing is sent anywhere. No email capture yet; it arrives with the email platform. Added 2026-11-22.
 - Build Check comparison takes up to four pasted codes (you plus up to three colleagues, for example CEO, CTO and COO), one per line. It shows every person side by side, flags areas where views differ (different status, or confidence 50 points apart), lists those first, and asks one question per flagged area: what evidence would convince all of us? Same role twice is shown as CTO and CTO 2. Everything still happens in the browser. Added 2026-11-22.
+- Encrypted send (decided by Anil 2026-11-22, being built): after results, a visitor may choose to send their answers, company name and work email to Transform Loop. The browser encrypts everything with a public key, so only Anil's private key can read it. A Cloudflare Worker (worker/worker.js) checks a Turnstile bot check, limits size, and files the encrypted blob as an issue in the private repo. Nothing is readable in transit or at rest without the private key. reader/index.html decrypts in the browser from a pasted key and groups submissions by company. No logins. The private key is held only by Anil and is never stored in any repo. Worker secrets (Turnstile secret, GitHub token) are entered by Anil, never by the agent.
