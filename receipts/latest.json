@@ -1,15 +1,13 @@
 {
-  "summary": "Encrypted send: Build Check send form, Worker, reader page",
+  "summary": "Turn on encrypted send: set Worker address",
   "files_touched": [
-    "build-check/index.html",
-    "reader/index.html",
-    "worker/worker.js"
+    "build-check/index.html"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "795d95513270f1b8a44299257fd524e02e925619a2150ffdfa56e9b2c828b043"
+      "sha256": "155bda25e98e7896f881a8dbeff6a1b40043ec3403eaa807f74709159941c529"
     }
   ],
-  "time": "2026-11-23T02:26:11Z"
+  "time": "2026-11-23T02:45:22Z"
 }
