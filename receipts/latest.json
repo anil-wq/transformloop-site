@@ -1,14 +1,14 @@
 {
-  "summary": "Move reader to build-check-reader and add download button",
+  "summary": "Two-key lock for submissions",
   "files_touched": [
-    "build-check-reader/index.html",
-    "reader/index.html"
+    "build-check/index.html",
+    "worker/worker.js"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "65f0652b6882689cf9c67dd9ab7e2673c1a4b3bd2e017d6e78cebacf2b2c84ee"
+      "sha256": "60bb5bea29a58ec5e3b076e9d59d7ba221c060d57d692273c33b2701b59c814f"
     }
   ],
-  "time": "2026-11-23T03:06:21Z"
+  "time": "2026-11-23T03:15:35Z"
 }

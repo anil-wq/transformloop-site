@@ -29,7 +29,7 @@ export default {
     let body;
     try { body = JSON.parse(text); } catch (e) { return out(400, { ok: false }); }
     const b = body && body.blob;
-    if (!b || typeof b.k !== 'string' || typeof b.iv !== 'string' || typeof b.ct !== 'string' || b.v !== 1) return out(400, { ok: false });
+    if (!b || typeof b.k !== 'string' || typeof b.iv !== 'string' || typeof b.ct !== 'string' || typeof b.ka !== 'string' || b.v !== 1) return out(400, { ok: false });
     if (typeof body.token !== 'string' || !body.token) return out(400, { ok: false });
 
     const form = new FormData();
@@ -41,7 +41,7 @@ export default {
     const vr = await v.json();
     if (!vr.success) return out(403, { ok: false });
 
-    const blob = JSON.stringify({ v: 1, k: b.k, iv: b.iv, ct: b.ct });
+    const blob = JSON.stringify({ v: 1, k: b.k, ka: b.ka, iv: b.iv, ct: b.ct });
     const gh = await fetch('https://api.github.com/repos/' + REPO + '/issues', {
       method: 'POST',
       headers: {

@@ -193,6 +193,7 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
   // Encrypted send. SEND_URL is the Cloudflare Worker address; empty until it is deployed (the send form stays hidden).
   var SEND_URL = 'https://tl-send.anil-94f.workers.dev';
   var TURNSTILE_KEY = '0x4AAAAAAGOKmoMhIq-y0P3q';
+  var AGENT_KEY = {"alg":"RSA-OAEP-256","kty":"RSA","n":"u2TU8usjmRJIHxSIWPuZqLtAMbUF5WZ7uKnSADEhaBY1baXoIW_3lyzKyIv1KJn0OVEw_9U2gTxe19LuL2JfIRHxyDC48e6dwKaIJfAlWgKMWXLFSy1iycUjtXJBavxL8XNq_r6AqOPZW_H5no3qug0uiiImIXtt5zIyUeeA4IKCRrfpmObmfi2KVUn0PhMt0_qZJxrZvzZvmoBU9rMYnr_MScZN-tfW-KVCyhdsS7aeiC7-cVsW6NgoxH215pktWAIPiwKnczHqqDKrXTkKFBvmVKtje0FEtxay1ZJr0CCAQEDg2UwknTPd0LHqb9EwQ09irUBi7B0l43jvpy8lgYwNtduhbMYQF1BNEqvTerQB3aj22jylchzLjculPDwwI1F7tlVyM-7egABh_zotYRXCFvBqA9Ufp-lut2jH6k8JL5FKbp8dYCJmIgUtoG0rkJLYiVVx-zyn6OPKWu20DOy5zfHFpNN3PaLURAHgRSUFBp68adR_2Heqs0_Igh21","e":"AQAB"};
   var PUBLIC_KEY = {"alg":"RSA-OAEP-256","kty":"RSA","n":"69F0_xAUlEYl5xC-Hb2vYcQ6qA5t6luyJCKtU9D8Jzbk2mOCEZlmAZdoaRU9bZgNYyZNOk5woJlyDKJ-el2SkxRSo6AfvLVCYVLMd6BsEE5VVRO4Pg3Vt-G0dhOZHoUfhxVUbJDvkghsTXTVJ--ifn-2zQVUwiB87B_ORt_-a9gtUwI1WobwBc-XT94y6KZ5mn7yj15fdNa7latlMrquIEpfUkrXTZz7ukSZ8TR_PKDPK6jQ8EZKNltreetpM96AhB0fOnXWTaxDzFf7hP7W4jwoj8aXF1kHPPvQOErCAmolajsnPNl9muH4_Rea0uNi8RiRveZfzmXYxo6xJ4HX92ti7JfsAle3ZOkDRl0XIjDCpt3-puC7AG6p5ZDdX2kcoXi_dA7dy6Ho5TRog-ObMoKNvlA7-Q5G8x2BrMI2wPbxjXIU_RMfbH_u7n1PtH6nO4nUg3cirCN4eVv-X-15RtdLKflywfiEEevvsLn53m1ODxkdOQBBT09Wzp250Vlx","e":"AQAB"};
 
   var ROLES = ['CEO', 'CTO', 'COO', 'Engineering or product leader', 'Other'];
@@ -602,13 +603,16 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     setSend('Sending…');
     var payload = JSON.stringify({ company: company, email: email, role: state.role || '', code: code(), at: new Date().toISOString() });
     var enc = new TextEncoder();
-    crypto.subtle.importKey('jwk', PUBLIC_KEY, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']).then(function (pub) {
+    var imp = function (jwk) { return crypto.subtle.importKey('jwk', jwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']); };
+    Promise.all([imp(PUBLIC_KEY), imp(AGENT_KEY)]).then(function (pubs) {
       return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']).then(function (aes) {
         var iv = crypto.getRandomValues(new Uint8Array(12));
         return Promise.all([
           crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, aes, enc.encode(payload)),
-          crypto.subtle.exportKey('raw', aes).then(function (raw) { return crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pub, raw); })
-        ]).then(function (r) { return { v: 1, iv: b64(iv), ct: b64(r[0]), k: b64(r[1]) }; });
+          crypto.subtle.exportKey('raw', aes).then(function (raw) {
+            return Promise.all([crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pubs[0], raw), crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pubs[1], raw)]);
+          })
+        ]).then(function (r) { return { v: 1, iv: b64(iv), ct: b64(r[0]), k: b64(r[1][0]), ka: b64(r[1][1]) }; });
       });
     }).then(function (blob) {
       return fetch(SEND_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: tsToken, blob: blob }) });
