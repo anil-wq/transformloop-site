@@ -1,13 +1,13 @@
 {
-  "summary": "Turn on encrypted send: set Worker address",
+  "summary": "Reader shows results as a readable table",
   "files_touched": [
-    "build-check/index.html"
+    "reader/index.html"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "155bda25e98e7896f881a8dbeff6a1b40043ec3403eaa807f74709159941c529"
+      "sha256": "10e0590d1244dc4f249af07e155732652e0cad2645c89efd29584ed3701c33d0"
     }
   ],
-  "time": "2026-11-23T02:45:22Z"
+  "time": "2026-11-23T02:58:22Z"
 }
