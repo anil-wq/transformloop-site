@@ -67,7 +67,7 @@ p { margin: 0; }
 .list .opt span { align-items: flex-start; gap: 12px; padding: 12px 14px; line-height: 1.4; }
 .list .opt span::before { content: ""; flex: none; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--muted); border-radius: 5px; background: var(--bg); }
 .list .opt input:checked + span::before { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--bg); }
-.q { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.q { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); }
 .q.reveal { animation: rise 0.4s ease both; }
 .q legend, .q .qt { font-weight: 600; padding: 0; }
 fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
@@ -86,7 +86,41 @@ fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
 .btn.ghost { background: transparent; border-color: var(--line); color: var(--fg); }
 .btn:focus-visible, .link:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.progress { position: sticky; top: 0; z-index: 5; background: var(--bg-alt); padding: 10px 0 8px; margin-top: 8px; }
+.progress { padding: 4px 0 6px; }
+main.wrap { max-width: 1120px; }
+.hero, #s-role, #s-mind { max-width: 860px; }
+.work { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 12px; }
+.pane { min-width: 0; }
+@media (min-width: 821px) { .pane { max-height: calc(100vh - 24px); overflow: auto; position: sticky; top: 12px; padding: 0 4px 6px 0; } }
+.lefttop { justify-content: space-between; padding-top: 4px; }
+.link-btn { background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 0.9rem; color: var(--accent); text-decoration: underline; cursor: pointer; }
+.link-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sec { padding: 0; gap: 0; margin-top: 10px; overflow: hidden; }
+.sec.open { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.sec-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; background: none; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.sec-head:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.sec-head .ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sec-head .t { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.num { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.num.ok { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+.sec-body { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+.sec .q { padding-top: 10px; gap: 8px; }
+.sec .opt span { min-height: 38px; padding: 6px 14px; }
+.why { font-size: 0.9rem; color: var(--muted); }
+.hint { font-size: 0.85rem; color: var(--muted); }
+.sec-foot { justify-content: space-between; }
+.sumcard { gap: 8px; padding: 14px 16px; margin-top: 0; }
+.sumcard > summary { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; cursor: pointer; }
+.srow { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.mini { font-size: 0.85rem; color: var(--muted); }
+.snote { font-size: 0.88rem; color: var(--accent); }
+@media (max-width: 820px) {
+  .work { display: flex; flex-direction: column; }
+  #right { display: contents; }
+  #sumd { order: -1; }
+  #left { order: 1; }
+  #results { order: 2; }
+}
 .bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width 0.4s ease; }
 .progress .meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
@@ -142,7 +176,7 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
 </header>
 
 <main class="wrap">
-  <section class="hero">
+  <section class="hero" id="hero">
     <div class="eyebrow">For CEOs, CTOs and COOs</div>
     <h1>Does what you built with AI do what you think it does?</h1>
     <p class="lede">Tell us what is on your mind. Sections open up based on your answers, so you only see what is relevant to you. About 10 minutes.</p>
@@ -160,26 +194,37 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     <h2 id="t-mind">What feels true right now?</h2>
     <p class="sub">Tick anything that sounds familiar. Each one opens a section below. Nothing ticked? Choose the last option and we will start with the basics.</p>
     <fieldset><legend class="sr">What feels true</legend><div class="list" id="picks"></div></fieldset>
+    <div class="row"><button type="button" class="btn" id="start" data-act="start" disabled>Start</button><span class="msg" id="startmsg">Pick at least one, or choose the basics.</span></div>
   </section>
 
-  <div class="progress" id="progress" hidden>
-    <div class="bar" role="progressbar" aria-label="Sections completed" aria-valuemin="0" aria-valuemax="100" id="pbar"><i id="pfill"></i></div>
-    <div class="meta"><span id="pleft"></span><span id="pcount"></span></div>
+  <div class="work" id="work" hidden>
+    <div class="pane" id="left">
+      <div class="row lefttop"><span class="step">Your sections</span><button type="button" class="link-btn" data-act="editpicks">Change my picks</button></div>
+      <div id="areas"></div>
+
+      <section class="card" id="s-more" hidden>
+        <h3>Add another section</h3>
+        <p class="sub">Open any section that did not come up on its own.</p>
+        <div class="chips" id="more"></div>
+      </section>
+
+      <section class="card" id="s-go" hidden>
+        <div class="row"><button type="button" class="btn" id="go" data-act="results">See my results</button><span class="msg" id="gomsg"></span></div>
+      </section>
+    </div>
+    <div class="pane" id="right">
+      <details class="card sumcard" id="sumd" open>
+        <summary>Your summary</summary>
+        <div class="progress" id="progress" hidden>
+          <div class="bar" role="progressbar" aria-label="Sections completed" aria-valuemin="0" aria-valuemax="100" id="pbar"><i id="pfill"></i></div>
+          <div class="meta"><span id="pleft"></span><span id="pcount"></span></div>
+        </div>
+        <div id="notes"></div>
+        <div id="sumrows"></div>
+      </details>
+      <div id="results"></div>
+    </div>
   </div>
-
-  <div id="areas"></div>
-
-  <section class="card" id="s-more" hidden>
-    <h3>Not on your mind yet? Check another area</h3>
-    <p class="sub">Open any section that did not come up on its own.</p>
-    <div class="chips" id="more"></div>
-  </section>
-
-  <section class="card" id="s-go" hidden>
-    <div class="row"><button type="button" class="btn" id="go" data-act="results">See my results</button><span class="msg" id="gomsg"></span></div>
-  </section>
-
-  <div id="results"></div>
 </main>
 
 <footer>
@@ -272,6 +317,16 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       advice: 'List what the old system did, run old and new on the same inputs, and track the share of matching behaviour as a number.',
       rel: 'define' }
   ];
+  var WHY = {
+    define: 'If nobody can say what correct looks like, AI builds to a guess and no one can tell when the work is finished.',
+    intent: 'AI can copy code but not the reasons behind it. If the reasons are not written down, the next change can quietly break them.',
+    proof: 'Passing tests only matter if they cover what real customers do. This shows whether problems are caught before customers see them.',
+    owner: 'If only one or two people understand the system, their absence or one wrong AI change can stop everything.',
+    dates: 'A date based on hope slips. This checks whether your date is based on measured progress.',
+    spend: 'AI costs grow fast. This checks whether you can see what you pay and what you get for it.',
+    guard: 'AI should only see what it is allowed to. This checks that the rule is enforced, not just remembered.',
+    parity: 'After a rebuild, it works is not enough. This checks the new version behaves like the old one.'
+  };
   var BY = {};
   AREAS.forEach(function (a) { BY[a.id] = a; });
 
@@ -279,9 +334,10 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
   var seen = {};
   var root = document;
 
-  function fresh() { return { role: '', picks: [], basics: false, extra: [], auto: {}, areas: {}, show: false }; }
+  function fresh() { return { role: '', picks: [], basics: false, extra: [], auto: {}, areas: {}, show: false, started: false }; }
+  var cur;
   function load() {
-    try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.areas) return s; } catch (e) {}
+    try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.areas) { if (s.started === undefined) s.started = !!(s.picks.length || s.basics || s.extra.length); return s; } } catch (e) {}
     return null;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
@@ -289,10 +345,12 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
   function ar(id) { if (!state.areas[id]) state.areas[id] = { c: null, a: {}, b: [] }; return state.areas[id]; }
 
   function unlocked() {
-    return AREAS.filter(function (a) {
-      return state.picks.indexOf(a.id) > -1 || state.extra.indexOf(a.id) > -1 || state.auto[a.id] ||
-        (state.basics && BASICS.indexOf(a.id) > -1);
-    }).map(function (a) { return a.id; });
+    var out = [];
+    function add(id) { if (BY[id] && out.indexOf(id) < 0) out.push(id); }
+    AREAS.forEach(function (a) { if (state.picks.indexOf(a.id) > -1 || (state.basics && BASICS.indexOf(a.id) > -1)) add(a.id); });
+    state.extra.forEach(add);
+    Object.keys(state.auto).forEach(function (id) { if (state.auto[id]) add(id); });
+    return out;
   }
   function q3Visible(a) { return !!(a.a.q1 && a.a.q2 && (a.a.q1 === 'y' || a.a.q2 === 'y')); }
   function blockersVisible(a) {
@@ -307,7 +365,9 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     ks.forEach(function (k) { var f = ANS.filter(function (x) { return x.v === a.a[k]; })[0]; sum += f ? f.n : 0; });
     return sum / ks.length;
   }
+  function allUnsure(a) { var ks = ['q1', 'q2'].concat(q3Visible(a) ? ['q3'] : []); return ks.every(function (k) { return a.a[k] === 'u'; }); }
   function statusOf(a) {
+    if (allUnsure(a)) return 'blind';
     var c = confN(a), e = evidence(a);
     if (e >= 0.75) return 'solid';
     if (c - e >= 0.35) return 'blind';
@@ -336,15 +396,18 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     document.getElementById('picks').innerHTML = html;
   }
   function areaCard(a, i) {
-    var s = ar(a.id), done = complete(s);
-    var h = '<section class="card' + (seen[a.id] ? '' : ' open-in') + '" data-area="' + a.id + '" aria-labelledby="h-' + a.id + '">';
-    h += '<div class="area-head"><div><div class="step">Section ' + (i + 1) + '</div><h2 id="h-' + a.id + '">' + esc(a.title) + '</h2>';
-    if (state.auto[a.id] && state.picks.indexOf(a.id) < 0 && state.extra.indexOf(a.id) < 0 && !(state.basics && BASICS.indexOf(a.id) > -1)) {
-      h += '<div class="opened">Opened because of your answers in “' + esc(BY[state.auto[a.id]].title) + '”</div>';
-    }
-    h += '</div>' + (done ? '<span class="st ' + statusOf(s) + '">' + STATUS[statusOf(s)].i + ' ' + STATUS[statusOf(s)].l + '</span>' : '<span class="badge">In progress</span>') + '</div>';
+    var s = ar(a.id), done = complete(s), open = cur === a.id;
+    var auto = state.auto[a.id] && state.picks.indexOf(a.id) < 0 && state.extra.indexOf(a.id) < 0 && !(state.basics && BASICS.indexOf(a.id) > -1);
+    var h = '<section class="card sec' + (open ? ' open' : '') + (seen[a.id] ? '' : ' open-in') + '" data-area="' + a.id + '" id="sec-' + a.id + '">';
+    h += '<button type="button" class="sec-head" data-act="toggle" data-area="' + a.id + '" id="h-' + a.id + '" aria-expanded="' + open + '" aria-controls="body-' + a.id + '">' +
+      '<span class="num' + (done ? ' ok' : '') + '" aria-hidden="true">' + (done ? '✓' : (i + 1)) + '</span>' +
+      '<span class="ttl"><span class="t">' + esc(a.title) + '</span>' + (auto ? '<span class="opened">Added because of your answers in “' + esc(BY[state.auto[a.id]].title) + '”</span>' : '') + '</span>' +
+      (done ? '<span class="st ' + statusOf(s) + '">' + STATUS[statusOf(s)].i + ' ' + STATUS[statusOf(s)].l + '</span>' : '<span class="badge">' + (open ? 'In progress' : 'Not done') + '</span>') + '</button>';
+    if (!open) return h + '</section>';
 
-    h += '<fieldset class="q"><legend>' + esc(a.conf) + '</legend><div class="chips">' +
+    h += '<div class="sec-body" id="body-' + a.id + '" role="region" aria-labelledby="h-' + a.id + '">';
+    h += '<p class="why"><b>Why we ask:</b> ' + esc(WHY[a.id]) + '</p>';
+    h += '<fieldset class="q" id="q-' + a.id + '-c"><legend>' + esc(a.conf) + '</legend><div class="chips">' +
       CONF.map(function (c) { return '<label class="opt"><input type="radio" name="' + a.id + '-c" value="' + c.v + '"' + (s.c === c.v ? ' checked' : '') + ' data-act="conf" data-area="' + a.id + '" data-fid="' + a.id + '-c-' + c.v + '"><span>' + c.l + '</span></label>'; }).join('') +
       '</div></fieldset>';
 
@@ -353,29 +416,57 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
       if (q3Visible(s)) h += question(a, s, 'q3', 2, true);
       else if (s.a.q1 && s.a.q2) h += '<div class="note">A third question opens when at least one of these is a yes, so we can see how deep it goes.</div>';
       if (blockersVisible(s)) {
-        h += '<fieldset class="q"><legend>What is getting in the way? Tick any that apply.</legend><div class="chips">' +
+        h += '<fieldset class="q" id="q-' + a.id + '-b"><legend>What is getting in the way? Tick any that apply.</legend><div class="chips">' +
           BLOCKERS.map(function (b, bi) { return '<label class="opt"><input type="checkbox" value="' + bi + '"' + (s.b.indexOf(bi) > -1 ? ' checked' : '') + ' data-act="block" data-area="' + a.id + '" data-fid="' + a.id + '-b' + bi + '"><span>' + esc(b) + '</span></label>'; }).join('') +
           '</div></fieldset>';
       }
       if (done) {
         var st = statusOf(s);
-        var msg = st === 'blind' ? 'You feel ' + (confN(s) >= 0.7 ? 'confident' : 'fairly sure') + ' here, but the evidence is thin. That gap is worth a conversation.'
+        var msg = st === 'blind' ? (confN(s) <= 0.35 ? 'You do not know this area yet. That is a blind spot, and a good place to start a conversation.' : 'You feel ' + (confN(s) >= 0.7 ? 'confident' : 'fairly sure') + ' here, but the evidence is thin. That gap is worth a conversation.')
           : st === 'solid' ? (confN(s) <= 0.35 ? 'Better than you think: you have more evidence than your confidence suggests.' : 'You can back up your confidence with evidence.')
           : st === 'gap' ? 'You sensed this one, and the answers agree. Good to know where to start.'
           : 'Some of this is in place, some is not.';
         h += '<div class="note"><b>' + STATUS[st].l + '.</b> ' + esc(msg) + '</div>';
       }
     }
-    return h + '</section>';
+    h += '<p class="hint">Not sure is a fine answer. It shows up as a blind spot, which is useful to know.</p>';
+    h += '<div class="row sec-foot" id="foot-' + a.id + '"><button type="button" class="btn ghost" data-act="skip" data-area="' + a.id + '">Not sure about this whole section</button>' +
+      '<button type="button" class="btn" data-act="next" data-area="' + a.id + '"' + (done ? '' : ' disabled') + '>' + (nextOpen(a.id) ? 'Next section' : 'Done') + '</button></div>';
+    return h + '</div></section>';
+  }
+  function nextOpen(id) {
+    var ids = unlocked(), i = ids.indexOf(id);
+    return ids.slice(i + 1).concat(ids.slice(0, i)).filter(function (x) { return !complete(ar(x)); })[0] || null;
+  }
+  function follow(id) {
+    var s = ar(id), t;
+    if (!s.c) t = 'q-' + id + '-c';
+    else if (!s.a.q1) t = 'q-' + id + '-q1';
+    else if (!s.a.q2) t = 'q-' + id + '-q2';
+    else if (q3Visible(s) && !s.a.q3) t = 'q-' + id + '-q3';
+    else t = 'foot-' + id;
+    var el = document.getElementById(t); if (!el) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  }
+  function goNext(id) {
+    var nx = nextOpen(id);
+    cur = nx || '';
+    save(); renderAll();
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var beh = reduce ? 'auto' : 'smooth';
+    if (nx) { var el = document.getElementById('sec-' + nx); if (el) el.scrollIntoView({ behavior: beh, block: 'start' }); setTimeout(function () { follow(nx); }, 60); }
+    else { var g = document.getElementById('go'); if (g) g.scrollIntoView({ behavior: beh, block: 'center' }); }
   }
   function question(a, s, k, idx, isNew) {
     var fid = a.id + '-' + k;
-    return '<fieldset class="q' + (isNew && !seen[fid] ? ' reveal' : '') + '"><legend>' + esc(a.q[idx]) + '</legend><div class="chips">' +
+    return '<fieldset class="q' + (isNew && !seen[fid] ? ' reveal' : '') + '" id="q-' + fid + '"><legend>' + esc(a.q[idx]) + '</legend><div class="chips">' +
       ANS.map(function (x) { return '<label class="opt"><input type="radio" name="' + fid + '" value="' + x.v + '"' + (s.a[k] === x.v ? ' checked' : '') + ' data-act="ans" data-area="' + a.id + '" data-k="' + k + '" data-fid="' + fid + '-' + x.v + '"><span>' + x.l + '</span></label>'; }).join('') +
       '</div></fieldset>';
   }
   function renderAreas() {
     var ids = unlocked();
+    if (cur === undefined || (cur && ids.indexOf(cur) < 0)) cur = ids.filter(function (id) { return !complete(ar(id)); })[0] || '';
     var box = document.getElementById('areas');
     box.innerHTML = ids.map(function (id, i) { return areaCard(BY[id], i); }).join('');
     ids.forEach(function (id) { seen[id] = true; ['q3'].forEach(function (k) { if (q3Visible(ar(id))) seen[id + '-' + k] = true; }); });
@@ -394,6 +485,14 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     document.getElementById('pcount').textContent = doneN + ' of ' + ids.length + ' sections done';
     document.getElementById('pleft').textContent = ids.length - doneN === 0 && ids.length ? 'All open sections done' : (ids.length - doneN) + ' still open';
     document.getElementById('s-go').hidden = !ids.length;
+    document.getElementById('work').hidden = !(state.started && ids.length);
+    document.getElementById('sumrows').innerHTML = ids.map(function (id) {
+      var s = ar(id), d = complete(s);
+      return '<div class="srow"><span>' + esc(BY[id].title) + '</span>' + (d ? '<span class="st ' + statusOf(s) + '">' + STATUS[statusOf(s)].i + ' ' + STATUS[statusOf(s)].l + '</span>' : '<span class="mini">' + (cur === id ? 'In progress' : 'Not done') + '</span>') + '</div>';
+    }).join('');
+    document.getElementById('notes').innerHTML = ids.filter(function (id) {
+      return state.auto[id] && state.picks.indexOf(id) < 0 && state.extra.indexOf(id) < 0 && !(state.basics && BASICS.indexOf(id) > -1);
+    }).map(function (id) { return '<p class="snote">Added: ' + esc(BY[id].title) + ', because of your answers in ' + esc(BY[state.auto[id]].title) + '.</p>'; }).join('');
     document.getElementById('go').disabled = !allDone();
     document.getElementById('gomsg').textContent = allDone() ? '' : 'Finish the open sections to see your results.';
   }
@@ -511,7 +610,10 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     var focusId = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute('data-fid') : null;
     var theirs = document.getElementById('theircode') ? document.getElementById('theircode').value : '';
     renderRoles(); renderPicks();
-    document.getElementById('s-mind').hidden = !state.role;
+    document.getElementById('hero').hidden = !!state.started;
+    document.getElementById('s-role').hidden = !!state.started;
+    document.getElementById('s-mind').hidden = !state.role || !!state.started;
+    document.getElementById('start').disabled = !(state.picks.length || state.basics);
     renderAreas(); renderResults();
     var t = document.getElementById('theircode'); if (t && theirs) t.value = theirs;
     if (focusId) { var el = document.querySelector('[data-fid="' + focusId + '"]'); if (el) el.focus({ preventScroll: true }); }
@@ -537,6 +639,7 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     }
     state.show = state.show && allDone();
     save(); renderAll();
+    if (act === 'conf' || act === 'ans') follow(id);
   });
   function afterAnswer(id) {
     var s = ar(id);
@@ -550,12 +653,24 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     var t = e.target.closest ? e.target.closest('[data-act]') : null;
     if (!t || t.tagName === 'INPUT') return;
     var act = t.getAttribute('data-act');
-    if (act === 'extra') { state.extra.push(t.getAttribute('data-area')); save(); renderAll(); }
+    if (act === 'toggle') {
+      var tid = t.getAttribute('data-area'); cur = cur === tid ? '' : tid; renderAll();
+      if (cur) { var sec = document.getElementById('sec-' + tid); if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }
+    else if (act === 'skip') {
+      var sid = t.getAttribute('data-area'), ss = ar(sid);
+      ss.c = 'unsure'; ss.a = { q1: 'u', q2: 'u' }; ss.b = [];
+      afterAnswer(sid); state.show = state.show && allDone(); goNext(sid);
+    }
+    else if (act === 'next') { goNext(t.getAttribute('data-area')); }
+    else if (act === 'start') { state.started = true; cur = undefined; save(); renderAll(); window.scrollTo({ top: 0 }); }
+    else if (act === 'editpicks') { state.started = false; save(); renderAll(); window.scrollTo({ top: 0 }); }
+    else if (act === 'extra') { state.extra.push(t.getAttribute('data-area')); save(); renderAll(); }
     else if (act === 'results') {
       if (!allDone()) return; state.show = true; save(); renderAll();
       var r = document.getElementById('res'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (act === 'edit') { state.show = false; save(); renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    else if (act === 'reset') { state = fresh(); seen = {}; save(); renderAll(); window.scrollTo({ top: 0 }); }
+    else if (act === 'reset') { state = fresh(); seen = {}; cur = undefined; save(); renderAll(); window.scrollTo({ top: 0 }); }
     else if (act === 'copy') {
       var m = document.getElementById('copymsg'), v = document.getElementById('mycode').value;
       var ok = function () { m.textContent = 'Copied.'; };
@@ -622,6 +737,7 @@ footer { padding: 28px 0 40px; font-size: 0.85rem; color: var(--muted); }
     }).catch(function () { tsToken = ''; try { window.turnstile.reset(tsId); } catch (x) {} setSend('That did not go through. Nothing was lost; try again.', true); });
   }
 
+  if (window.matchMedia && matchMedia('(max-width: 820px)').matches) { var sd = document.getElementById('sumd'); if (sd) sd.open = false; }
   renderAll();
 })();
 </script>

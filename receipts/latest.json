@@ -1,14 +1,13 @@
 {
-  "summary": "Full questions in reader, consent line on send form",
+  "summary": "Two-pane Build Check layout, Why we ask lines, whole-section Not sure, auto-scroll",
   "files_touched": [
-    "build-check-reader/index.html",
     "build-check/index.html"
   ],
   "retrieved": [
     {
       "file": "context/site.md",
-      "sha256": "eb90f96a538f1c14dae9f1b78f22ed79ee266c7b129ef61a5f8990d09973bcc7"
+      "sha256": "3f88ee399bba0753e642369cfea39c57de1ebc6e11a715ae2dc5989378d48a50"
     }
   ],
-  "time": "2026-11-23T03:18:13Z"
+  "time": "2026-11-23T07:03:38Z"
 }
